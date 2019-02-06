@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="de_DE"><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<meta charset="UTF-8">
+<!--[if IE]><meta http-equiv="X-UA-Compatible" content="IE=edge"><![endif]-->
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="generator" content="Asciidoctor 1.5.8">
+<meta name="author" content="Hong-Phuc Bui">
+<title>Fehler Behandlung</title>
+
+
+
+<link rel="shortcut icon" href="https://mathcoach.htwsaar.de/openolat/m/5f311a1edf91dafb1cef105484dd6d72/public/favicon.ico"><link href="Fehler%20Behandlung_fichiers/dfhi-sandbox.css" rel="stylesheet"></head>
+<body class="article">
+<div id="header">
+<h1>Fehler Behandlung</h1>
+<div class="details">
+<span id="author" class="author">Hong-Phuc Bui</span><br>
+<span id="email" class="email"><a href="mailto:hong-phuc.bui@htwsaar.de">hong-phuc.bui@htwsaar.de</a></span><br>
+</div>
+<div id="toc" class="toc">
+<div id="toctitle">Inhaltsverzeichnis</div>
+<ul class="sectlevel1">
+<li><a href="#_syntax">1. Syntax</a></li>
+<li><a href="#_gängige_build_in_error">2. Gängige Build-In Error</a></li>
+<li><a href="#_definition_eigene_error">3. Definition eigene Error</a></li>
+</ul>
+</div>
+</div>
+<div id="content">
+<div class="sect1">
+<h2 id="_syntax"><a class="anchor" href="#_syntax"></a>1. Syntax</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Unter Fehler Behandlung (error handling) versteht man, wie das Programm die fehlerhaften Eingabe behandelt, und wie
+das Programm den fehlerhaften Zustand reagiert.</p>
+</div>
+<div class="paragraph">
+<p>JavaScript bietet <code>throw</code> um fehlerhaften Zustand zu signalisieren und <code>try</code>-<code>catch</code> um Fehler abzufangen.
+Die Syntax der Befehlen <code>throw</code> und <code>try</code>-<code>catch</code> ist einfach:</p>
+</div>
+<div class="listingblock">
+<div class="title">Der Befehl <code>throw</code></div>
+<div class="content">
+<pre class="snippet cm-s-default" data-language="text">throw &lt;Object&gt;;</pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">Der Befehl <code>try</code>-<code>catch</code></div>
+<div class="content">
+<pre class="snippet cm-s-default" data-language="text">try {
+    &lt;statements&gt; // (1)
+}catch(ex){
+    &lt;statements&gt; // (2)
+}</pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tbody><tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Die Befehlen hier sind Befehlen, die eine bestimmte Aufgabe ausführen sollen. In einem regulären Ablauf verursacht
+diesen Befehlen keinen Fehler.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Wenn der (erste) Fehler in &lt;1&gt; ausgeworfen wird, werden die Befehlen in &lt;2&gt; ausgeführt. Die Variable <code>ex</code>
+referenziert auf dem ausgeworfenen Fehler und steht in der Block 2 zur Verfügung.</td>
+</tr>
+</tbody></table>
+</div>
+<div class="paragraph">
+<p>Wir verbessert die Funktion <code>buildTriangle</code> um die Datentypen vom Argument <code>line</code> zu überprüfen:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="snippet cm-s-default" data-language="javascript"><span class="cm-keyword">function</span> <span class="cm-def">buildTriangleWithException</span>(<span class="cm-def">lines</span>,
+                       <span class="cm-def">trailingChar</span> <span class="cm-operator">=</span> <span class="cm-string">' '</span>,
+                       <span class="cm-def">separator</span><span class="cm-operator">=</span> <span class="cm-string">' '</span>,
+                       <span class="cm-def">char</span> <span class="cm-operator">=</span> <span class="cm-string">'*'</span>) {
+    <span class="cm-keyword">let</span> <span class="cm-def">numOfLine</span> <span class="cm-operator">=</span> <span class="cm-variable">Number</span>(<span class="cm-variable-2">lines</span>);
+    <span class="cm-keyword">if</span> ( <span class="cm-variable">isNaN</span>(<span class="cm-variable-2">numOfLine</span>) ){
+        <span class="cm-keyword">throw</span> <span class="cm-keyword">new</span> <span class="cm-variable">TypeError</span>(<span class="cm-string-2">`${</span><span class="cm-variable-2">lines</span><span class="cm-string-2">}</span> <span class="cm-string-2">is not a number`</span>); <span class="cm-comment">// <i class="conum" data-value="1"></i><b>(1)</b></span>
+    }
+    <span class="cm-keyword">if</span> ( <span class="cm-variable-2">numOfLine</span> <span class="cm-operator">&lt;</span> <span class="cm-number">0</span> ){
+        <span class="cm-keyword">throw</span> <span class="cm-keyword">new</span> <span class="cm-variable">RangeError</span>(<span class="cm-string-2">`Parameter 'line' must be positive, but got ${</span><span class="cm-variable-2">numOfLine</span><span class="cm-string-2">}</span><span class="cm-string-2">`</span>);
+    }
+    <span class="cm-keyword">var</span> <span class="cm-def">triangle</span> <span class="cm-operator">=</span> [];
+
+    <span class="cm-keyword">for</span> (<span class="cm-keyword">let</span> <span class="cm-def">i</span> <span class="cm-operator">=</span> <span class="cm-number">0</span>; <span class="cm-variable-2">i</span> <span class="cm-operator">&lt;</span> <span class="cm-variable-2">numOfLine</span>; <span class="cm-operator">++</span><span class="cm-variable-2">i</span>) {
+        <span class="cm-keyword">let</span> <span class="cm-def">line</span> <span class="cm-operator">=</span> [];
+        <span class="cm-keyword">for</span> (<span class="cm-keyword">let</span> <span class="cm-def">j</span> <span class="cm-operator">=</span> <span class="cm-number">1</span>; <span class="cm-variable-2">j</span> <span class="cm-operator">&lt;</span> <span class="cm-variable-2">lines</span> <span class="cm-operator">-</span> <span class="cm-variable-2">i</span>; <span class="cm-operator">++</span><span class="cm-variable-2">j</span>) {
+            <span class="cm-variable-2">line</span>.<span class="cm-property">push</span>(<span class="cm-variable-2">trailingChar</span>);
+        }
+        <span class="cm-keyword">for</span> (<span class="cm-keyword">let</span> <span class="cm-def">k</span> <span class="cm-operator">=</span> <span class="cm-number">0</span>; <span class="cm-variable-2">k</span> <span class="cm-operator">&lt;=</span> <span class="cm-variable-2">i</span>; <span class="cm-operator">++</span><span class="cm-variable-2">k</span>) {
+            <span class="cm-variable-2">line</span>.<span class="cm-property">push</span>(<span class="cm-variable-2">char</span>);
+            <span class="cm-variable-2">k</span> <span class="cm-operator">&lt;</span> <span class="cm-variable-2">i</span> <span class="cm-operator">?</span> <span class="cm-variable-2">line</span>.<span class="cm-property">push</span>(<span class="cm-variable-2">separator</span>) : <span class="cm-atom">null</span>;
+        }
+        <span class="cm-variable-2">triangle</span>.<span class="cm-property">push</span>(<span class="cm-variable-2">line</span>);
+    }
+    <span class="cm-keyword">return</span> <span class="cm-variable-2">triangle</span>;
+}
+<span class="cm-comment">// Nutzung der Funktion:</span>
+<span class="cm-keyword">try</span>{
+    <span class="cm-keyword">var</span> <span class="cm-def">triangle</span> <span class="cm-operator">=</span> <span class="cm-variable">buildTriangleWithException</span>(<span class="cm-string">"string"</span>); <span class="cm-comment">// <i class="conum" data-value="2"></i><b>(2)</b></span>
+}<span class="cm-keyword">catch</span>(<span class="cm-def">ex</span>){ <span class="cm-comment">// <i class="conum" data-value="3"></i><b>(3)</b></span>
+    <span class="cm-variable">console</span>.<span class="cm-property">log</span>(<span class="cm-variable-2">ex</span>);
+}</pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tbody><tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Ursache des Fehlers.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Der Fehler wird ausgeworfen.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>Der Fehler wird in <code>catch</code>-Block abgefangen.</td>
+</tr>
+</tbody></table>
+</div>
+<div class="paragraph">
+<p>Man kann theoretisch fast alle Typen von Objekt als 'Fehler' auswerfen, dennoch soll man ein Object der Type <code>Error</code>
+benutzen um einen informativen Stack Trace zu erhalten. Die folgenden Bilder zeigen den unterschiedlichen Stack Strace.</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="Fehler%20Behandlung_fichiers/throw-exception.png" alt="throw exception">
+</div>
+<div class="title">Figure 1. Throw Exception</div>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="Fehler%20Behandlung_fichiers/throw-string.png" alt="throw string">
+</div>
+<div class="title">Figure 2. Throw String</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_gängige_build_in_error"><a class="anchor" href="#_gängige_build_in_error"></a>2. Gängige Build-In Error</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Neben <code>TypeError</code> und <code>RangeError</code> verfügt eine JavaScript-Umgebung noch einiges eingebauten <code>Error</code>:</p>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><code>EvalError</code></dt>
+<dd>
+<p>repräsentiert einen Fehler, welche passieren kann, wenn die globale Funktion <code>eval</code> aufgerufen wird.</p>
+</dd>
+<dt class="hdlist1"><code>RangeError</code></dt>
+<dd>
+<p>repräsentiert einen Fehler, welche passiert, wenn ein numerischer Wert außerhalb der gültige Bereich.</p>
+</dd>
+<dt class="hdlist1"><code>ReferenceError</code></dt>
+<dd>
+<p>repräsentiert einen Fehler welche passiert, wenn man ein nicht deklarierte Variable referenziert.</p>
+</dd>
+<dt class="hdlist1"><code>SyntaxError</code></dt>
+<dd>
+<p>repräsentiert einen syntaktische Fehler in der Argument der globale Funktion <code>eval</code>.</p>
+</dd>
+<dt class="hdlist1"><code>TypeError</code></dt>
+<dd>
+<p>repräsentiert einen Fehler, welche passiert, wenn eine Variable oder Parameter kein gültige Datentypen haben.</p>
+</dd>
+</dl>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_definition_eigene_error"><a class="anchor" href="#_definition_eigene_error"></a>3. Definition eigene Error</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>(Wird besprochen im Teil "Objectorientierte Programmierung")</p>
+</div>
+</div>
+</div>
+</div>
+
+<script type="text/javascript" src="Fehler%20Behandlung_fichiers/dfhi-sandbox.js"></script></body></html>

@@ -1,0 +1,48 @@
+{
+  "name": "dom-terminal",
+  "version": "1.0.0",
+  "description": "port plain-html to webpack build system",
+  "scripts": {
+    "watch": "webpack --watch --env.deveplopment",
+    "build": "webpack --env.production",
+    "doc": "esdoc",
+    "clean": "rm -rf dist",
+    "cleandoc": "rm -rf docs",
+    "cleanall": "rm -rf node_modules; npm run cleandoc; npm run clean",
+    "start-server": "npx http-server -p 8084 dist -c-1 src",
+    "start-doc-server": "npx http-server -p 8083 docs -c-1 src",
+    "test": "jest"
+  },
+  "private": true,
+  "author": "Hong-Phuc Bui",
+  "license": "ISC",
+  "devDependencies": {
+    "babel-core": "^6.26.3",
+    "babel-jest": "^23.6.0",
+    "babel-loader": "^7.1.5",
+    "babel-polyfill": "^6.26.0",
+    "babel-preset-env": "^1.7.0",
+    "babel-register": "^6.26.0",
+    "css-loader": "^2.1.0",
+    "esdoc": "^1.1.0",
+    "esdoc-standard-plugin": "^1.0.0",
+    "expose-loader": "^0.7.5",
+    "file-loader": "^3.0.1",
+    "html-loader": "^0.5.5",
+    "html-webpack-plugin": "^3.2.0",
+    "http-server": "^0.11.1",
+    "jest": "^23.6.0",
+    "jest-transform-stub": "^1.0.0",
+    "mini-css-extract-plugin": "^0.5.0",
+    "optimize-css-assets-webpack-plugin": "^5.0.1",
+    "regenerator-runtime": "^0.13.1",
+    "style-loader": "^0.23.1",
+    "terser-webpack-plugin": "^1.2.1",
+    "webpack": "^4.28.3",
+    "webpack-cli": "^3.1.2"
+  },
+  "dependencies": {
+    "jsxgraph": "^0.99.7",
+    "sprintf-js": "^1.1.2"
+  }
+}

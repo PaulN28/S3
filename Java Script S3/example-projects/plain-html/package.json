@@ -1,0 +1,14 @@
+{
+  "name": "plain-html",
+  "version": "1.0.0",
+  "description": "plain html/javascript project without build system",
+  "scripts": {
+    "start-server": "npx http-server -p 8080 -c-1 src"
+  },
+  "private": true,
+  "author": "Hong-Phuc Bui",
+  "license": "ISC",
+  "devDependencies": {
+    "http-server": "^0.11.1"
+  }
+}

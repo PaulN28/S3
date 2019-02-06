@@ -1,0 +1,1068 @@
+<!DOCTYPE html>
+<html lang="de_DE"><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<meta charset="UTF-8">
+<!--[if IE]><meta http-equiv="X-UA-Compatible" content="IE=edge"><![endif]-->
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="generator" content="Asciidoctor 1.5.8">
+<meta name="author" content="Hong-Phuc Bui">
+<title>Document Object Model</title>
+
+
+
+<link rel="shortcut icon" href="https://mathcoach.htwsaar.de/openolat/m/5f311a1edf91dafb1cef105484dd6d72/public/favicon.ico"><link href="Document%20Object%20Model_fichiers/dfhi-sandbox.css" rel="stylesheet"></head>
+<body class="article">
+<div id="header">
+<h1>Document Object Model</h1>
+<div class="details">
+<span id="author" class="author">Hong-Phuc Bui</span><br>
+<span id="email" class="email"><a href="mailto:hong-phuc.bui@htwsaar.de">hong-phuc.bui@htwsaar.de</a></span><br>
+</div>
+<div id="toc" class="toc">
+<div id="toctitle">Inhaltsverzeichnis</div>
+<ul class="sectlevel1">
+<li><a href="#_struktur_eines_html_dokumentes">1. Struktur eines HTML Dokumentes</a></li>
+<li><a href="#_dom_traversieren">2. DOM Traversieren</a>
+<ul class="sectlevel2">
+<li><a href="#_rekursion">2.1. Rekursion</a></li>
+<li><a href="#_das_objekt_treewalker">2.2. Das Objekt <code>TreeWalker</code></a></li>
+</ul>
+</li>
+<li><a href="#_dom_manipulation">3. DOM Manipulation</a>
+<ul class="sectlevel2">
+<li><a href="#_geschwindigkeit">3.1. Geschwindigkeit</a></li>
+<li><a href="#_selbst_studium">3.2. Selbst-Studium</a></li>
+</ul>
+</li>
+<li><a href="#_dom_mit_jquery">4. DOM mit jQuery</a>
+<ul class="sectlevel2">
+<li><a href="#_einstellung_in_webpack_projekt">4.1. Einstellung in Webpack Projekt</a></li>
+<li><a href="#_jquery_api_für_die_dom_manipulation">4.2. <code>jQuery</code> API für die DOM Manipulation</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div id="content">
+<div id="preamble">
+<div class="sectionbody">
+<script>var sandboxLoadFiles=["demo/jquery-3.2.1.js"];window&&(window.sandboxLoadFile=sandboxLoadFiles)</script>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_struktur_eines_html_dokumentes"><a class="anchor" href="#_struktur_eines_html_dokumentes"></a>1. Struktur eines HTML Dokumentes</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Wenn ein Browser ein HTML Dokument (MIME-Type text/html) erhält, parsert er das Dokument (Text) in einer baumartigen
+Datenstruktur. Diese Baum wird als Document Object Model (DOM) genannt. Das Dokument</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="snippet cm-s-default" data-language="text/html"><span class="cm-meta">&lt;!doctype html&gt;</span>
+<span class="cm-tag cm-bracket">&lt;</span><span class="cm-tag">html</span> <span class="cm-attribute">lang</span>=<span class="cm-string">"de"</span><span class="cm-tag cm-bracket">&gt;</span>
+<span class="cm-tag cm-bracket">&lt;</span><span class="cm-tag">head</span><span class="cm-tag cm-bracket">&gt;</span>
+    <span class="cm-tag cm-bracket">&lt;</span><span class="cm-tag">title</span><span class="cm-tag cm-bracket">&gt;</span>Plain HTML<span class="cm-tag cm-bracket">&lt;/</span><span class="cm-tag">title</span><span class="cm-tag cm-bracket">&gt;</span>
+<span class="cm-tag cm-bracket">&lt;/</span><span class="cm-tag">head</span><span class="cm-tag cm-bracket">&gt;</span>
+<span class="cm-tag cm-bracket">&lt;</span><span class="cm-tag">body</span><span class="cm-tag cm-bracket">&gt;</span>
+<span class="cm-tag cm-bracket">&lt;</span><span class="cm-tag">h1</span><span class="cm-tag cm-bracket">&gt;</span>Plain HTML<span class="cm-tag cm-bracket">&lt;/</span><span class="cm-tag">h1</span><span class="cm-tag cm-bracket">&gt;</span>
+
+<span class="cm-tag cm-bracket">&lt;</span><span class="cm-tag">p</span><span class="cm-tag cm-bracket">&gt;</span>HTML steht für Hypertext Markup Language.<span class="cm-tag cm-bracket">&lt;/</span><span class="cm-tag">p</span><span class="cm-tag cm-bracket">&gt;</span>
+
+<span class="cm-tag cm-bracket">&lt;</span><span class="cm-tag">p</span><span class="cm-tag cm-bracket">&gt;</span>HTML wird als Baum-Struktur dargestellt.<span class="cm-tag cm-bracket">&lt;/</span><span class="cm-tag">p</span><span class="cm-tag cm-bracket">&gt;</span>
+Text ohne Tags
+
+Other Text
+<span class="cm-tag cm-bracket">&lt;/</span><span class="cm-tag">body</span><span class="cm-tag cm-bracket">&gt;</span>
+<span class="cm-tag cm-bracket">&lt;/</span><span class="cm-tag">html</span><span class="cm-tag cm-bracket">&gt;</span></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>wird in einem Baum wie folgt aufgespannt.</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="Document%20Object%20Model_fichiers/diag-dbdda1b614579fee80976cb52b039fdb.png" alt="diag dbdda1b614579fee80976cb52b039fdb" width="1151" height="443">
+</div>
+</div>
+<div class="paragraph">
+<p>Die leeren Text-Nodes (z.B vor <code>h1</code>, zwischen <code>h1</code> und <code>p</code>, ect) werden nicht gezeigt.
+Der aufgespannte DOM ist <em>live</em>. Das heißt man kann die Struktur des DOMs zur Laufzeit ändern, die Seite
+ist automatisch aktualisiert.</p>
+</div>
+<div class="paragraph">
+<p>Der DOM-Standard ist Sprache-neutral konzipiert. Es bedeutet, dass man die DOM-API unabhängig von Sprache nutzen kann.
+Das hat dennoch einige Nachteilen in sich, zum Beispiel:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Die Eigenschaft <code>Node.nodeType</code> ist eine Ganzzahl statt ein Enum. Es führt zu nicht aussagekräftige Code.</p>
+</li>
+<li>
+<p>Die Node in DOM hat das Eignenschaft <code>childNodes</code>, welche die Interface <code>NodeList</code> mit der Eigenschaft <code>length</code> ist.
+Da es eine Interface ist, kann man kein gängige JavaScript Idiomen auf Array wie <code>map</code>, <code>forEach</code> anwenden.</p>
+</li>
+<li>
+<p>Es gibt in der DOM-API keine Möglichkeit, ein neuen Node gleichzeitig zu erstellen und im DOM-Baum hinzuzufügen.
+DOM-Relevante Code neigt dazu, kryptisch, lang, und nicht wartbar zu sein.</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_dom_traversieren"><a class="anchor" href="#_dom_traversieren"></a>2. DOM Traversieren</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>DOM-Traversieren ist ein Prozess, welche die Nodes im DOM-Baum systematisch abarbeitet. Die Relation
+eines Node mit den anderen Node im Baum kann man an Hand folgenden Eigenschaften Attributen erfassen:</p>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><code>Node.nodeType</code></dt>
+<dd>
+<p>ein Ganzzahl, S. <a href="https://developer.mozilla.org/en-US/docs/Web/API/Node/nodeType" class="bare">https://developer.mozilla.org/en-US/docs/Web/API/Node/nodeType</a></p>
+</dd>
+<dt class="hdlist1"><code>Node.parentNode</code></dt>
+<dd>
+<p>Referenz auf dem übergeordneten Node</p>
+</dd>
+<dt class="hdlist1"><code>Node.childNodes</code></dt>
+<dd>
+<p>Instanz der Interface <code>NodeList</code>, enthält alle <strong>direkte</strong> untergeordneten Nodes</p>
+</dd>
+<dt class="hdlist1"><code>Node.lastChild</code></dt>
+<dd>
+<p>Letzten Child-Node</p>
+</dd>
+<dt class="hdlist1"><code>Node.firstChild</code></dt>
+<dd>
+<p>Ersten Child-Node</p>
+</dd>
+<dt class="hdlist1"><code>Node.previousSibling</code></dt>
+<dd>
+<p>der vorherige Node in gleicher Ebene</p>
+</dd>
+<dt class="hdlist1"><code>Node.nextSibling</code></dt>
+<dd>
+<p>der nächsten Node in gleicher Ebene</p>
+</dd>
+</dl>
+</div>
+<div class="sect2">
+<h3 id="_rekursion"><a class="anchor" href="#_rekursion"></a>2.1. Rekursion</h3>
+<div class="paragraph">
+<p>Da die Struktur der DOM wieder holt sich, kann man mit einer rekursive Funktion den DOM Baum ziemlich gut
+traversieren. Als Beispiel schreiben wir eine Funktion <code>visit</code>, die alle Nodes in der <code>document.body</code> DOM besucht, und folgenden Text
+in der Browser-Console ausgibt:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="snippet cm-s-default" data-language="text">      body node type 1
+        h1 node type 1
+[kein Tag] node type 3 Plain HTML
+         p node type 1
+[kein Tag] node type 3 HTML steht für Hypertext Markup Language.
+...</pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">Die Funktion <code>visit</code></div>
+<div class="content">
+<div class="editor-wrap" style="margin-right: 0px; margin-left: 0px;"><div class="CodeMirror cm-s-default"><div style="overflow: hidden; position: relative; width: 3px; height: 0px; top: 231.6px; left: 118.4px;"><textarea style="position: absolute; bottom: -1em; padding: 0px; width: 1px; height: 1em; outline: currentcolor none medium;" autocorrect="off" autocapitalize="off" spellcheck="false" tabindex="0" wrap="off"></textarea></div><div class="CodeMirror-vscrollbar" tabindex="-1" cm-not-content="true" style="bottom: 0px;"><div style="min-width: 1px; height: 0px;"></div></div><div class="CodeMirror-hscrollbar" tabindex="-1" cm-not-content="true"><div style="height: 100%; min-height: 1px; width: 0px;"></div></div><div class="CodeMirror-scrollbar-filler" cm-not-content="true"></div><div class="CodeMirror-gutter-filler" cm-not-content="true"></div><div class="CodeMirror-scroll" tabindex="-1" draggable="true"><div class="CodeMirror-sizer" style="margin-left: 16px; margin-bottom: -17px; border-right-width: 13px; min-height: 292px; min-width: 668.2px; padding-right: 0px; padding-bottom: 0px;"><div style="position: relative; top: 0px;"><div class="CodeMirror-lines" role="presentation"><div style="position: relative; outline: currentcolor none medium;" role="presentation"><div class="CodeMirror-measure"><div class="CodeMirror-linenumber CodeMirror-gutter-elt"><div>15</div></div></div><div class="CodeMirror-measure"></div><div style="position: relative; z-index: 1;"></div><div class="CodeMirror-cursors" style="visibility: hidden;"><div class="CodeMirror-cursor" style="left: 102.4px; top: 226.8px; height: 18.9px;">&nbsp;</div></div><div class="CodeMirror-code" role="presentation" style=""><div style="position: relative;"><div class="CodeMirror-gutter-wrapper" style="left: -16px;"><div class="CodeMirror-linenumber CodeMirror-gutter-elt" style="left: 0px; width: 13px;">1</div></div><pre class=" CodeMirror-line " role="presentation"><span role="presentation"><span class="cm-keyword">function</span> <span class="cm-def">visit</span>(<span class="cm-def">node</span>) {</span></pre></div><div style="position: relative;"><div class="CodeMirror-gutter-wrapper" style="left: -16px;"><div class="CodeMirror-linenumber CodeMirror-gutter-elt" style="left: 0px; width: 13px;">2</div></div><pre class=" CodeMirror-line " role="presentation"><span role="presentation">    <span class="cm-keyword">const</span> <span class="cm-def">noTag</span> <span class="cm-operator">=</span> <span class="cm-string">"[kein Tag]"</span>; <span class="cm-comment">// Note: the longest tag ist blockquote</span></span></pre></div><div style="position: relative;"><div class="CodeMirror-gutter-wrapper" style="left: -16px;"><div class="CodeMirror-linenumber CodeMirror-gutter-elt" style="left: 0px; width: 13px;">3</div></div><pre class=" CodeMirror-line " role="presentation"><span role="presentation">    <span class="cm-keyword">const</span> <span class="cm-def">tagLength</span> <span class="cm-operator">=</span> <span class="cm-variable-2">noTag</span>.<span class="cm-property">length</span>;</span></pre></div><div style="position: relative;"><div class="CodeMirror-gutter-wrapper" style="left: -16px;"><div class="CodeMirror-linenumber CodeMirror-gutter-elt" style="left: 0px; width: 13px;">4</div></div><pre class=" CodeMirror-line " role="presentation"><span role="presentation">    <span class="cm-keyword">var</span> <span class="cm-def">output</span> <span class="cm-operator">=</span> (<span class="cm-variable-2">node</span>.<span class="cm-property">nodeType</span> <span class="cm-operator">&amp;&amp;</span> <span class="cm-variable-2">node</span>.<span class="cm-property">nodeType</span> <span class="cm-operator">===</span> <span class="cm-variable">Node</span>.<span class="cm-property">ELEMENT_NODE</span>) <span class="cm-comment">// (1)</span></span></pre></div><div style="position: relative;"><div class="CodeMirror-gutter-wrapper" style="left: -16px;"><div class="CodeMirror-linenumber CodeMirror-gutter-elt" style="left: 0px; width: 13px;">5</div></div><pre class=" CodeMirror-line " role="presentation"><span role="presentation">        <span class="cm-operator">?</span> <span class="cm-variable">String</span>(<span class="cm-variable-2">node</span>.<span class="cm-property">tagName</span>).<span class="cm-property">toLowerCase</span>().<span class="cm-property">padStart</span>(<span class="cm-variable-2">tagLength</span>) : <span class="cm-variable-2">noTag</span>;</span></pre></div><div style="position: relative;"><div class="CodeMirror-gutter-wrapper" style="left: -16px;"><div class="CodeMirror-linenumber CodeMirror-gutter-elt" style="left: 0px; width: 13px;">6</div></div><pre class=" CodeMirror-line " role="presentation"><span role="presentation">    <span class="cm-variable-2">output</span> <span class="cm-operator">+=</span> <span class="cm-string">" node type "</span> <span class="cm-operator">+</span> <span class="cm-variable-2">node</span>.<span class="cm-property">nodeType</span>; <span class="cm-comment">// (1)</span></span></pre></div><div style="position: relative;"><div class="CodeMirror-gutter-wrapper" style="left: -16px;"><div class="CodeMirror-linenumber CodeMirror-gutter-elt" style="left: 0px; width: 13px;">7</div></div><pre class=" CodeMirror-line " role="presentation"><span role="presentation">    <span class="cm-keyword">if</span> (<span class="cm-variable-2">node</span>.<span class="cm-property">nodeType</span> <span class="cm-operator">==</span> <span class="cm-variable">Node</span>.<span class="cm-property">TEXT_NODE</span>) {</span></pre></div><div style="position: relative;"><div class="CodeMirror-gutter-wrapper" style="left: -16px;"><div class="CodeMirror-linenumber CodeMirror-gutter-elt" style="left: 0px; width: 13px;">8</div></div><pre class=" CodeMirror-line " role="presentation"><span role="presentation">        <span class="cm-variable-2">output</span> <span class="cm-operator">+=</span> (<span class="cm-string">" "</span> <span class="cm-operator">+</span> <span class="cm-variable-2">node</span>.<span class="cm-property">textContent</span> ); <span class="cm-comment">// (1)</span></span></pre></div><div style="position: relative;"><div class="CodeMirror-gutter-wrapper" style="left: -16px;"><div class="CodeMirror-linenumber CodeMirror-gutter-elt" style="left: 0px; width: 13px;">9</div></div><pre class=" CodeMirror-line " role="presentation"><span role="presentation">    }</span></pre></div><div style="position: relative;"><div class="CodeMirror-gutter-wrapper" style="left: -16px;"><div class="CodeMirror-linenumber CodeMirror-gutter-elt" style="left: 0px; width: 13px;">10</div></div><pre class=" CodeMirror-line " role="presentation"><span role="presentation">    <span class="cm-variable">console</span>.<span class="cm-property">log</span>(<span class="cm-variable-2">output</span>); <span class="cm-comment">// (2)</span></span></pre></div><div style="position: relative;"><div class="CodeMirror-gutter-wrapper" style="left: -16px;"><div class="CodeMirror-linenumber CodeMirror-gutter-elt" style="left: 0px; width: 13px;">11</div></div><pre class=" CodeMirror-line " role="presentation"><span role="presentation"><span cm-text="">​</span></span></pre></div><div style="position: relative;"><div class="CodeMirror-gutter-wrapper" style="left: -16px;"><div class="CodeMirror-linenumber CodeMirror-gutter-elt" style="left: 0px; width: 13px;">12</div></div><pre class=" CodeMirror-line " role="presentation"><span role="presentation">    <span class="cm-keyword">if</span> (<span class="cm-variable-2">node</span>.<span class="cm-property">childNodes</span> <span class="cm-operator">&amp;&amp;</span> <span class="cm-variable-2">node</span>.<span class="cm-property">childNodes</span>.<span class="cm-property">length</span> <span class="cm-operator">&gt;</span> <span class="cm-number">0</span>) { <span class="cm-comment">// (3)</span></span></pre></div><div style="position: relative;"><div class="CodeMirror-gutter-wrapper" style="left: -16px;"><div class="CodeMirror-linenumber CodeMirror-gutter-elt" style="left: 0px; width: 13px;">13</div></div><pre class=" CodeMirror-line " role="presentation"><span role="presentation">        [<span class="cm-meta">...</span> <span class="cm-variable-2">node</span>.<span class="cm-property">childNodes</span>].<span class="cm-property">forEach</span>( <span class="cm-def">child</span> <span class="cm-operator">=&gt;</span> <span class="cm-variable">visit</span>(<span class="cm-variable-2">child</span>) ); <span class="cm-comment">// (3)</span></span></pre></div><div style="position: relative;"><div class="CodeMirror-gutter-wrapper" style="left: -16px;"><div class="CodeMirror-linenumber CodeMirror-gutter-elt" style="left: 0px; width: 13px;">14</div></div><pre class=" CodeMirror-line " role="presentation"><span role="presentation">    }</span></pre></div><div style="position: relative;"><div class="CodeMirror-gutter-wrapper" style="left: -16px;"><div class="CodeMirror-linenumber CodeMirror-gutter-elt" style="left: 0px; width: 13px;">15</div></div><pre class=" CodeMirror-line " role="presentation"><span role="presentation">}</span></pre></div></div></div></div></div></div><div style="position: absolute; height: 13px; width: 1px; border-bottom: 0px solid transparent; top: 292px;"></div><div class="CodeMirror-gutters" style="height: 305px; left: 0px;"><div class="CodeMirror-gutter CodeMirror-linenumbers" style="width: 16px;"></div></div></div></div><div class="sandbox-output"></div><div class="sandbox-menu" title="Sandbox menu..."></div></div><pre class="snippet cm-s-default" data-language="javascript" style="display: none;"><span class="cm-keyword">function</span> <span class="cm-def">visit</span>(<span class="cm-def">node</span>) {
+    <span class="cm-keyword">const</span> <span class="cm-def">noTag</span> <span class="cm-operator">=</span> <span class="cm-string">"[kein Tag]"</span>; <span class="cm-comment">// Note: the longest tag ist blockquote</span>
+    <span class="cm-keyword">const</span> <span class="cm-def">tagLength</span> <span class="cm-operator">=</span> <span class="cm-variable-2">noTag</span>.<span class="cm-property">length</span>;
+    <span class="cm-keyword">var</span> <span class="cm-def">output</span> <span class="cm-operator">=</span> (<span class="cm-variable-2">node</span>.<span class="cm-property">nodeType</span> <span class="cm-operator">&amp;</span><span class="cm-operator">&amp;</span> <span class="cm-variable-2">node</span>.<span class="cm-property">nodeType</span> <span class="cm-operator">===</span> <span class="cm-variable">Node</span>.<span class="cm-property">ELEMENT_NODE</span>) <span class="cm-comment">// <i class="conum" data-value="1"></i><b>(1)</b></span>
+        <span class="cm-operator">?</span> <span class="cm-variable">String</span>(<span class="cm-variable-2">node</span>.<span class="cm-property">tagName</span>).<span class="cm-property">toLowerCase</span>().<span class="cm-property">padStart</span>(<span class="cm-variable-2">tagLength</span>) : <span class="cm-variable-2">noTag</span>;
+    <span class="cm-variable-2">output</span> <span class="cm-operator">+=</span> <span class="cm-string">" node type "</span> <span class="cm-operator">+</span> <span class="cm-variable-2">node</span>.<span class="cm-property">nodeType</span>; <span class="cm-comment">// <i class="conum" data-value="1"></i><b>(1)</b></span>
+    <span class="cm-keyword">if</span> (<span class="cm-variable-2">node</span>.<span class="cm-property">nodeType</span> <span class="cm-operator">==</span> <span class="cm-variable">Node</span>.<span class="cm-property">TEXT_NODE</span>) {
+        <span class="cm-variable-2">output</span> <span class="cm-operator">+=</span> (<span class="cm-string">" "</span> <span class="cm-operator">+</span> <span class="cm-variable-2">node</span>.<span class="cm-property">textContent</span> ); <span class="cm-comment">// <i class="conum" data-value="1"></i><b>(1)</b></span>
+    }
+    <span class="cm-variable">console</span>.<span class="cm-property">log</span>(<span class="cm-variable-2">output</span>); <span class="cm-comment">// <i class="conum" data-value="2"></i><b>(2)</b></span>
+
+    <span class="cm-keyword">if</span> (<span class="cm-variable-2">node</span>.<span class="cm-property">childNodes</span> <span class="cm-operator">&amp;</span><span class="cm-operator">&amp;</span> <span class="cm-variable-2">node</span>.<span class="cm-property">childNodes</span>.<span class="cm-property">length</span> <span class="cm-operator">&gt;</span> <span class="cm-number">0</span>) { <span class="cm-comment">// <i class="conum" data-value="3"></i><b>(3)</b></span>
+        [<span class="cm-meta">...</span> <span class="cm-variable-2">node</span>.<span class="cm-property">childNodes</span>].<span class="cm-property">forEach</span>( <span class="cm-def">child</span> <span class="cm-operator">=&gt;</span> <span class="cm-variable">visit</span>(<span class="cm-variable-2">child</span>) ); <span class="cm-comment">// <i class="conum" data-value="3"></i><b>(3)</b></span>
+    }
+}</pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tbody><tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Den Ausgabe-String zusammen bauen.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Den Ausgabe-String in der Browser-Console ausgeben</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>Rekursive die Funktion <code>visit</code> für jede Child-Node aufrufen.</td>
+</tr>
+</tbody></table>
+</div>
+<div class="paragraph">
+<p>Das Ergebnis der Funktion in der Vorlesung erfüllt noch nicht alles, was man erwartet.
+Zum Beispile werden die Tag-Namen noch in Großbuchstaben geschrieben. Die Ausgabe ist
+noch nicht rangiert. Diese kann man aber schnell nachbessern.</p>
+</div>
+<div class="paragraph">
+<p>Da die Aktion, welche auf einem Node angewendet wird, hat nicht mit dem Strategie, wie
+man die Nodes im DOM-Baum traversiert, kann man die beide Teilen auch in getrennte Funktionen
+implementieren. Wir implementieren die Funktion <code>improveVisit</code>, die zwei Parametern hat.
+Der erste ist das Root-Node im DOM-(Sub)baum, der zweite ist eine Funktion, welche die Aktion
+auf dem besuchten Node ausführt.</p>
+</div>
+<div class="listingblock">
+<div class="title">Die Funktion <code>improveVisit</code></div>
+<div class="content">
+<pre class="snippet cm-s-default" data-language="javascript"><span class="cm-comment">/**</span>
+<span class="cm-comment"> * excutes the action on the node and its children.</span>
+<span class="cm-comment"> * @param node {Node} the node to be started</span>
+<span class="cm-comment"> * @param action {function} one argument function</span>
+<span class="cm-comment"> *</span>
+<span class="cm-comment"> */</span>
+<span class="cm-keyword">function</span> <span class="cm-def">improveVisit</span>(<span class="cm-def">node</span>, <span class="cm-def">action</span>){
+    <span class="cm-variable-2">action</span>(<span class="cm-variable-2">node</span>);
+    <span class="cm-keyword">if</span> (<span class="cm-variable-2">node</span>.<span class="cm-property">childNodes</span> <span class="cm-operator">&amp;</span><span class="cm-operator">&amp;</span> <span class="cm-variable-2">node</span>.<span class="cm-property">childNodes</span>.<span class="cm-property">length</span> <span class="cm-operator">&gt;</span> <span class="cm-number">0</span>) {
+        [<span class="cm-meta">...</span> <span class="cm-variable-2">node</span>.<span class="cm-property">childNodes</span>].<span class="cm-property">forEach</span>( <span class="cm-def">child</span> <span class="cm-operator">=&gt;</span> <span class="cm-variable">improveVisit</span>(<span class="cm-variable-2">child</span>, <span class="cm-variable-2">action</span>) );
+    }
+}</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Als Beispiel implementieren wir die Funktion <code>printNode</code>, welche die Information über
+die Node in dem Browser-Console ausgibt.</p>
+</div>
+<div class="listingblock">
+<div class="title">Die Funktion <code>printNode</code></div>
+<div class="content">
+<div class="editor-wrap" style="margin-right: 0px; margin-left: 0px;"><div class="CodeMirror cm-s-default"><div style="overflow: hidden; position: relative; width: 3px; height: 0px; top: 288.3px; left: 420.8px;"><textarea style="position: absolute; bottom: -1em; padding: 0px; width: 1px; height: 1em; outline: currentcolor none medium;" autocorrect="off" autocapitalize="off" spellcheck="false" tabindex="0" wrap="off"></textarea></div><div class="CodeMirror-vscrollbar" tabindex="-1" cm-not-content="true" style="bottom: 17px;"><div style="min-width: 1px; height: 0px;"></div></div><div class="CodeMirror-hscrollbar" tabindex="-1" cm-not-content="true" style="display: block; right: 0px; left: 16px;"><div style="height: 100%; min-height: 1px; width: 869.8px;"></div></div><div class="CodeMirror-scrollbar-filler" cm-not-content="true" style="height: 17px; width: 17px;"></div><div class="CodeMirror-gutter-filler" cm-not-content="true"></div><div class="CodeMirror-scroll" tabindex="-1" draggable="true"><div class="CodeMirror-sizer" style="margin-left: 16px; margin-bottom: -17px; border-right-width: 13px; min-height: 424px; min-width: 869.8px; padding-right: 0px; padding-bottom: 17px;"><div style="position: relative; top: 0px;"><div class="CodeMirror-lines" role="presentation"><div style="position: relative; outline: currentcolor none medium;" role="presentation"><div class="CodeMirror-measure"><div class="CodeMirror-linenumber CodeMirror-gutter-elt"><div>22</div></div></div><div class="CodeMirror-measure"></div><div style="position: relative; z-index: 1;"></div><div class="CodeMirror-cursors" style=""><div class="CodeMirror-cursor" style="left: 404.8px; top: 283.5px; height: 18.9px;">&nbsp;</div></div><div class="CodeMirror-code" role="presentation" style=""><div style="position: relative;"><div class="CodeMirror-gutter-wrapper" style="left: 55px;"><div class="CodeMirror-linenumber CodeMirror-gutter-elt" style="left: 0px; width: 13px;">1</div></div><pre class=" CodeMirror-line " role="presentation"><span role="presentation"><span class="cm-comment">/**</span></span></pre></div><div style="position: relative;"><div class="CodeMirror-gutter-wrapper" style="left: 55px;"><div class="CodeMirror-linenumber CodeMirror-gutter-elt" style="left: 0px; width: 13px;">2</div></div><pre class=" CodeMirror-line " role="presentation"><span role="presentation"><span class="cm-comment"> * @param node {Node} a DOM-Node, whose information is shown on the console.</span></span></pre></div><div style="position: relative;"><div class="CodeMirror-gutter-wrapper" style="left: 55px;"><div class="CodeMirror-linenumber CodeMirror-gutter-elt" style="left: 0px; width: 13px;">3</div></div><pre class=" CodeMirror-line " role="presentation"><span role="presentation"><span class="cm-comment"> * @param maxPrintText=15 {Number} maximum characters of content Text of a TextNode, which is printed.</span></span></pre></div><div style="position: relative;"><div class="CodeMirror-gutter-wrapper" style="left: 55px;"><div class="CodeMirror-linenumber CodeMirror-gutter-elt" style="left: 0px; width: 13px;">4</div></div><pre class=" CodeMirror-line " role="presentation"><span role="presentation"><span class="cm-comment"> */</span></span></pre></div><div style="position: relative;"><div class="CodeMirror-gutter-wrapper" style="left: 55px;"><div class="CodeMirror-linenumber CodeMirror-gutter-elt" style="left: 0px; width: 13px;">5</div></div><pre class=" CodeMirror-line " role="presentation"><span role="presentation"><span class="cm-keyword">function</span> <span class="cm-def">printNode</span>(<span class="cm-def">node</span>, <span class="cm-def">maxPrintText</span><span class="cm-operator">=</span><span class="cm-number">15</span>){</span></pre></div><div style="position: relative;"><div class="CodeMirror-gutter-wrapper" style="left: 55px;"><div class="CodeMirror-linenumber CodeMirror-gutter-elt" style="left: 0px; width: 13px;">6</div></div><pre class=" CodeMirror-line " role="presentation"><span role="presentation">    <span class="cm-keyword">const</span> <span class="cm-def">noTag</span> <span class="cm-operator">=</span> <span class="cm-string">"[kein Tag]"</span>;</span></pre></div><div style="position: relative;"><div class="CodeMirror-gutter-wrapper" style="left: 55px;"><div class="CodeMirror-linenumber CodeMirror-gutter-elt" style="left: 0px; width: 13px;">7</div></div><pre class=" CodeMirror-line " role="presentation"><span role="presentation">    <span class="cm-keyword">const</span> <span class="cm-def">tagLength</span> <span class="cm-operator">=</span> <span class="cm-variable-2">noTag</span>.<span class="cm-property">length</span>;</span></pre></div><div style="position: relative;"><div class="CodeMirror-gutter-wrapper" style="left: 55px;"><div class="CodeMirror-linenumber CodeMirror-gutter-elt" style="left: 0px; width: 13px;">8</div></div><pre class=" CodeMirror-line " role="presentation"><span role="presentation">    <span class="cm-keyword">var</span> <span class="cm-def">output</span> <span class="cm-operator">=</span> (<span class="cm-variable-2">node</span>.<span class="cm-property">nodeType</span> <span class="cm-operator">&amp;&amp;</span> <span class="cm-variable-2">node</span>.<span class="cm-property">nodeType</span> <span class="cm-operator">===</span> <span class="cm-variable">Node</span>.<span class="cm-property">ELEMENT_NODE</span>)</span></pre></div><div style="position: relative;"><div class="CodeMirror-gutter-wrapper" style="left: 55px;"><div class="CodeMirror-linenumber CodeMirror-gutter-elt" style="left: 0px; width: 13px;">9</div></div><pre class=" CodeMirror-line " role="presentation"><span role="presentation">        <span class="cm-operator">?</span> <span class="cm-variable">String</span>(<span class="cm-variable-2">node</span>.<span class="cm-property">tagName</span>).<span class="cm-property">toLowerCase</span>().<span class="cm-property">padStart</span>(<span class="cm-variable-2">tagLength</span>) : <span class="cm-variable-2">noTag</span>;</span></pre></div><div style="position: relative;"><div class="CodeMirror-gutter-wrapper" style="left: 55px;"><div class="CodeMirror-linenumber CodeMirror-gutter-elt" style="left: 0px; width: 13px;">10</div></div><pre class=" CodeMirror-line " role="presentation"><span role="presentation">    <span class="cm-variable-2">output</span> <span class="cm-operator">+=</span> <span class="cm-string">" node type "</span> <span class="cm-operator">+</span> <span class="cm-variable-2">node</span>.<span class="cm-property">nodeType</span>;</span></pre></div><div style="position: relative;"><div class="CodeMirror-gutter-wrapper" style="left: 55px;"><div class="CodeMirror-linenumber CodeMirror-gutter-elt" style="left: 0px; width: 13px;">11</div></div><pre class=" CodeMirror-line " role="presentation"><span role="presentation">    <span class="cm-keyword">if</span> (<span class="cm-variable-2">node</span>.<span class="cm-property">nodeType</span> <span class="cm-operator">==</span> <span class="cm-variable">Node</span>.<span class="cm-property">TEXT_NODE</span>) {</span></pre></div><div style="position: relative;"><div class="CodeMirror-gutter-wrapper" style="left: 55px;"><div class="CodeMirror-linenumber CodeMirror-gutter-elt" style="left: 0px; width: 13px;">12</div></div><pre class=" CodeMirror-line " role="presentation"><span role="presentation">        <span class="cm-keyword">const</span> <span class="cm-def">noText</span> <span class="cm-operator">=</span> <span class="cm-string">"[empty]"</span>;</span></pre></div><div style="position: relative;"><div class="CodeMirror-gutter-wrapper" style="left: 55px;"><div class="CodeMirror-linenumber CodeMirror-gutter-elt" style="left: 0px; width: 13px;">13</div></div><pre class=" CodeMirror-line " role="presentation"><span role="presentation">        <span class="cm-keyword">let</span> <span class="cm-def">textContent</span> <span class="cm-operator">=</span> <span class="cm-variable-2">node</span>.<span class="cm-property">textContent</span>.<span class="cm-property">trim</span>();</span></pre></div><div style="position: relative;"><div class="CodeMirror-gutter-wrapper" style="left: 55px;"><div class="CodeMirror-linenumber CodeMirror-gutter-elt" style="left: 0px; width: 13px;">14</div></div><pre class=" CodeMirror-line " role="presentation"><span role="presentation">        <span class="cm-keyword">if</span> (<span class="cm-variable-2">textContent</span>.<span class="cm-property">length</span> <span class="cm-operator">===</span> <span class="cm-number">0</span>){</span></pre></div><div style="position: relative;"><div class="CodeMirror-gutter-wrapper" style="left: 55px;"><div class="CodeMirror-linenumber CodeMirror-gutter-elt" style="left: 0px; width: 13px;">15</div></div><pre class=" CodeMirror-line " role="presentation"><span role="presentation">            <span class="cm-variable-2">textContent</span> <span class="cm-operator">=</span> <span class="cm-variable-2">noText</span>;</span></pre></div><div style="position: relative;"><div class="CodeMirror-gutter-wrapper" style="left: 55px;"><div class="CodeMirror-linenumber CodeMirror-gutter-elt" style="left: 0px; width: 13px;">16</div></div><pre class=" CodeMirror-line " role="presentation"><span role="presentation">        }<span class="cm-keyword">if</span> <span class=" CodeMirror-matchingbracket">(</span><span class="cm-variable-2">textContent</span>.<span class="cm-property">length</span> <span class="cm-operator">&gt;</span> <span class="cm-variable-2">maxPrintText</span><span class=" CodeMirror-matchingbracket">)</span>{</span></pre></div><div style="position: relative;"><div class="CodeMirror-gutter-wrapper" style="left: 55px;"><div class="CodeMirror-linenumber CodeMirror-gutter-elt" style="left: 0px; width: 13px;">17</div></div><pre class=" CodeMirror-line " role="presentation"><span role="presentation">            <span class="cm-variable-2">textContent</span> <span class="cm-operator">=</span> <span class="cm-variable-2">textContent</span>.<span class="cm-property">substring</span>(<span class="cm-number">0</span>,<span class="cm-variable-2">maxPrintText</span><span class="cm-operator">-</span><span class="cm-number">1</span>) <span class="cm-operator">+</span> <span class="cm-string">"..."</span>;</span></pre></div><div style="position: relative;"><div class="CodeMirror-gutter-wrapper" style="left: 55px;"><div class="CodeMirror-linenumber CodeMirror-gutter-elt" style="left: 0px; width: 13px;">18</div></div><pre class=" CodeMirror-line " role="presentation"><span role="presentation">        }</span></pre></div><div style="position: relative;"><div class="CodeMirror-gutter-wrapper" style="left: 55px;"><div class="CodeMirror-linenumber CodeMirror-gutter-elt" style="left: 0px; width: 13px;">19</div></div><pre class=" CodeMirror-line " role="presentation"><span role="presentation">        <span class="cm-variable-2">output</span> <span class="cm-operator">+=</span> (<span class="cm-string">" "</span> <span class="cm-operator">+</span> <span class="cm-variable-2">textContent</span> );</span></pre></div><div style="position: relative;"><div class="CodeMirror-gutter-wrapper" style="left: 55px;"><div class="CodeMirror-linenumber CodeMirror-gutter-elt" style="left: 0px; width: 13px;">20</div></div><pre class=" CodeMirror-line " role="presentation"><span role="presentation">    }</span></pre></div><div style="position: relative;"><div class="CodeMirror-gutter-wrapper" style="left: 55px;"><div class="CodeMirror-linenumber CodeMirror-gutter-elt" style="left: 0px; width: 13px;">21</div></div><pre class=" CodeMirror-line " role="presentation"><span role="presentation">    <span class="cm-variable">console</span>.<span class="cm-property">log</span>(<span class="cm-variable-2">output</span>);</span></pre></div><div style="position: relative;"><div class="CodeMirror-gutter-wrapper" style="left: 55px;"><div class="CodeMirror-linenumber CodeMirror-gutter-elt" style="left: 0px; width: 13px;">22</div></div><pre class=" CodeMirror-line " role="presentation"><span role="presentation">}</span></pre></div></div></div></div></div></div><div style="position: absolute; height: 13px; width: 1px; border-bottom: 17px solid transparent; top: 424px;"></div><div class="CodeMirror-gutters" style="height: 454px; left: 71px;"><div class="CodeMirror-gutter CodeMirror-linenumbers" style="width: 16px;"></div></div></div></div><div class="sandbox-output"></div><div class="sandbox-menu" title="Sandbox menu..."></div></div><pre class="snippet cm-s-default" data-language="javascript" style="display: none;"><span class="cm-comment">/**</span>
+<span class="cm-comment"> * @param node {Node} a DOM-Node, whose information is shown on the console.</span>
+<span class="cm-comment"> * @param maxPrintText=15 {Number} maximum characters of content Text of a TextNode, which is printed.</span>
+<span class="cm-comment"> */</span>
+<span class="cm-keyword">function</span> <span class="cm-def">printNode</span>(<span class="cm-def">node</span>, <span class="cm-def">maxPrintText</span><span class="cm-operator">=</span><span class="cm-number">15</span>){
+    <span class="cm-keyword">const</span> <span class="cm-def">noTag</span> <span class="cm-operator">=</span> <span class="cm-string">"[kein Tag]"</span>;
+    <span class="cm-keyword">const</span> <span class="cm-def">tagLength</span> <span class="cm-operator">=</span> <span class="cm-variable-2">noTag</span>.<span class="cm-property">length</span>;
+    <span class="cm-keyword">var</span> <span class="cm-def">output</span> <span class="cm-operator">=</span> (<span class="cm-variable-2">node</span>.<span class="cm-property">nodeType</span> <span class="cm-operator">&amp;</span><span class="cm-operator">&amp;</span> <span class="cm-variable-2">node</span>.<span class="cm-property">nodeType</span> <span class="cm-operator">===</span> <span class="cm-variable">Node</span>.<span class="cm-property">ELEMENT_NODE</span>)
+        <span class="cm-operator">?</span> <span class="cm-variable">String</span>(<span class="cm-variable-2">node</span>.<span class="cm-property">tagName</span>).<span class="cm-property">toLowerCase</span>().<span class="cm-property">padStart</span>(<span class="cm-variable-2">tagLength</span>) : <span class="cm-variable-2">noTag</span>;
+    <span class="cm-variable-2">output</span> <span class="cm-operator">+=</span> <span class="cm-string">" node type "</span> <span class="cm-operator">+</span> <span class="cm-variable-2">node</span>.<span class="cm-property">nodeType</span>;
+    <span class="cm-keyword">if</span> (<span class="cm-variable-2">node</span>.<span class="cm-property">nodeType</span> <span class="cm-operator">==</span> <span class="cm-variable">Node</span>.<span class="cm-property">TEXT_NODE</span>) {
+        <span class="cm-keyword">const</span> <span class="cm-def">noText</span> <span class="cm-operator">=</span> <span class="cm-string">"[empty]"</span>;
+        <span class="cm-keyword">let</span> <span class="cm-def">textContent</span> <span class="cm-operator">=</span> <span class="cm-variable-2">node</span>.<span class="cm-property">textContent</span>.<span class="cm-property">trim</span>();
+        <span class="cm-keyword">if</span> (<span class="cm-variable-2">textContent</span>.<span class="cm-property">length</span> <span class="cm-operator">===</span> <span class="cm-number">0</span>){
+            <span class="cm-variable-2">textContent</span> <span class="cm-operator">=</span> <span class="cm-variable-2">noText</span>;
+        }<span class="cm-keyword">if</span> (<span class="cm-variable-2">textContent</span>.<span class="cm-property">length</span> <span class="cm-operator">&gt;</span> <span class="cm-variable-2">maxPrintText</span>){
+            <span class="cm-variable-2">textContent</span> <span class="cm-operator">=</span> <span class="cm-variable-2">textContent</span>.<span class="cm-property">substring</span>(<span class="cm-number">0</span>,<span class="cm-variable-2">maxPrintText</span><span class="cm-operator">-</span><span class="cm-number">1</span>) <span class="cm-operator">+</span> <span class="cm-string">"..."</span>;
+        }
+        <span class="cm-variable-2">output</span> <span class="cm-operator">+=</span> (<span class="cm-string">" "</span> <span class="cm-operator">+</span> <span class="cm-variable-2">textContent</span> );
+    }
+    <span class="cm-variable">console</span>.<span class="cm-property">log</span>(<span class="cm-variable-2">output</span>);
+}</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Die Nutzung der beiden Funktionen ist denkbar einfach:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="snippet cm-s-default" data-language="javascript"><span class="cm-variable">improveVisit</span>(<span class="cm-variable">document</span>.<span class="cm-property">body</span>, <span class="cm-variable">printNode</span>);</pre>
+</div>
+</div>
+<div class="paragraph">
+<div class="title">Fingerübung</div>
+<p>Die obigen Nutzung lässt es nicht zu, dass man die Länge des ausgegebenen Text bestimmt.</p>
+</div>
+<div class="paragraph">
+<p>Schreiben Sie eine Funktion <code>buildPrintNodeFn(textLength)</code>, welche eine Funktion zurück gibt,
+die die Funktion <code>printNode</code> verwendet um die Informationen eines Nodes auszugeben. Man kann mit Hilf
+dieser Funktion die Anzahl der ausgegeben Zeichen von Content eines TextNode bestimmen kann.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="snippet cm-s-default" data-language="javascript"><span class="cm-keyword">function</span> <span class="cm-def">buildPrintNodeFn</span>(<span class="cm-def">textLength</span>) {
+<span class="cm-comment">// ....</span>
+    <span class="cm-keyword">return</span> <span class="cm-keyword">function</span>(<span class="cm-comment">/*....*/</span>){
+        <span class="cm-comment">// ....</span>
+    }
+}
+<span class="cm-keyword">var</span> <span class="cm-def">printer</span> <span class="cm-operator">=</span> <span class="cm-variable">buildPrintNodeFn</span>(<span class="cm-number">30</span>);
+<span class="cm-variable">improveVisit</span>(<span class="cm-variable">document</span>.<span class="cm-property">body</span>, <span class="cm-variable">printer</span>);</pre>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_anwendungsbeispiel"><a class="anchor" href="#_anwendungsbeispiel"></a>2.1.1. Anwendungsbeispiel</h4>
+<div class="paragraph">
+<p>Wir wollen in diesem Beispiel den DOM-Baum von einem HTML-Body in Graphviz-Format <a href="https://graphviz.gitlab.io/_pages/doc/info/lang.html" class="bare">https://graphviz.gitlab.io/_pages/doc/info/lang.html</a>
+(<code>.dot</code>-Datei) konvertieren, sodass wir sie mit Hilf des Programm <code>dot</code> den DOM-Baum als Bilder visualisieren können.</p>
+</div>
+<div class="paragraph">
+<p>Eine <code>.dot</code>-Datei, die den DOM-Baum abbildet, sieht <em>etwa</em> so aus:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="snippet cm-s-default" data-language="dot">digraph DOM { // (1)
+    node[shape="rectangle", fontname="Source Code Pro", fontsize=12]; // (2)
+    // (3)
+    document;
+    html;
+    head; title;
+    body;
+    h1;
+    p1[label="p"];
+    p2[label="p"];
+
+    // (4)
+    subgraph leafs {
+        node[style=filled, fillcolor="#F5FF7F"]; // (4)
+        text_node_0[label="(text node 0)\nPlain HTML"];
+        text_node_1[label="(text node 1)\nPlain HTML"];
+        text_node_2[label="(text node 2)\nHTML steht für Hypertext Markup Language."];
+        text_node_3[label="(text node 3)\nHTML wird als Baum dargestellt."];
+        text_node_4[label="(text node 4)\nText ohne Tags..."];
+    }
+
+    // (5)
+    document -&gt; html;
+
+    html -&gt; head;
+    html -&gt; body;
+
+    head -&gt; title;
+
+    title -&gt; text_node_0;
+
+    body -&gt; h1;
+    body -&gt; p2;
+    body -&gt; p1;
+    body -&gt; text_node_4;
+
+    h1 -&gt; text_node_1;
+
+    p1 -&gt; text_node_2;
+
+    p2 -&gt; text_node_3;
+} // (1)</pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tbody><tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Deklaration eines gerichteten Graph</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Formatierung von Node</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>Liste alle Branch-Nodes</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td>Liste alle Leaf-Nodes mit anderer Format als Branches Format.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="5"></i><b>5</b></td>
+<td>Liste alle Kanten in der Graph</td>
+</tr>
+</tbody></table>
+</div>
+<div class="paragraph">
+<p>Der generierte Graphviz-Code muss nicht exakt so aussehen.</p>
+</div>
+<div class="listingblock">
+<div class="title">Die Funktion <code>visitDOM</code></div>
+<div class="content">
+<pre class="snippet cm-s-default" data-language="js">function visitDOM(node, action, enterNodeAction, leaveNodeAction){
+    if (typeof enterNodeAction === 'function') {
+        enterNodeAction(node);
+    }
+    action(node);
+    if (node.childNodes &amp;&amp; node.childNodes.length &gt; 0) {
+        [... node.childNodes].forEach( child =&gt; visitDOM(child, action, enterNodeAction, leaveNodeAction) );
+    }
+    if (typeof leaveNodeAction === 'function') {
+        leaveNodeAction(node);
+    }
+}</pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">Die Funktion <code>buildNodeAction</code></div>
+<div class="content">
+<pre class="snippet cm-s-default" data-language="js">function buildNodeAction(dotNodeFormat, dotLeafNodeFormat){
+    let leafNode = [];
+    let branchNode = [];
+    let nodeCount = {};
+    let workingNode = [];
+
+    let branches = [];
+    let textLengthMax = 15;
+
+    let constructNodeId = function(node, count){
+        return `${node.nodeName.replace('#','')}_${count}`;
+    };
+
+    return {
+        enter: function (node) {
+            let nodeName = node.nodeName;
+            let count =nodeCount[nodeName];
+            if (count) {
+                count++;
+            }else {
+                count = 1;
+            }
+            nodeCount[nodeName] = count;
+            workingNode.push( constructNodeId(node,count) );
+        },
+
+        action: function(node){
+            let nodeType = node.nodeType;
+            let dotNode = workingNode[workingNode.length - 1];
+            if (nodeType === Node.TEXT_NODE || nodeType === Node.COMMENT_NODE ) {
+                let text = node.textContent;
+                if (text ) {
+                    text = text.trim();
+                    if (text.trim().length &gt; textLengthMax) {
+                        text = text.trim().substring(0, textLengthMax - 1) + "...";
+                    }else if (text.length === 0) {
+                        text = "[empty]";
+                    }
+                }
+                leafNode.push( `${dotNode}[label="${text}"]` );
+            }else {
+                if (nodeType === Node.ELEMENT_NODE) {
+                    branchNode.push(`${dotNode}[label="${node.nodeName.toLowerCase()}"]`);
+                }else{
+                    branchNode.push(`${dotNode}[label="${node.nodeName}(type: ${nodeType})"]`);
+                }
+            }
+        },
+
+        leave: function (node) {
+            let curentNode = workingNode.pop();
+            if (workingNode.length &gt; 0) {
+                let parentNode = workingNode[workingNode.length -1];
+                branches.push(`${parentNode}  -&gt;  ${curentNode}`);
+            }
+        },
+
+        getGraphvizCode: function () {
+            return "digraph DOM {\n\t" +
+                `${dotNodeFormat};\n\t` +
+                branchNode.join(";\n\t") + "\n\n" +
+                "\tsubgraph leaf {\n\t" +
+                `${dotLeafNodeFormat};\n\t\t` +
+                leafNode.join(";\n\t\t") +
+                "\n\t}\n\n\t" +
+                branches.join(';\n\t') +
+                "\n}";
+        }
+    }
+}</pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">Zusammenspielen</div>
+<div class="content">
+<pre class="snippet cm-s-default" data-language="js">var nodeAction = buildNodeAction("node[shape=rectangle, fontname=\"Source Code Pro\", fontsize=12]",
+                "node[style=filled, fillcolor=\"#F5FF7F\"]");
+visitDOM(document, nodeAction.action, nodeAction.enter, nodeAction.leave);
+console.log(nodeAction.getGraphvizCode());</pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_das_objekt_treewalker"><a class="anchor" href="#_das_objekt_treewalker"></a>2.2. Das Objekt <code>TreeWalker</code></h3>
+<div class="paragraph">
+<p>Die DOM-API bietet mit dem Objekt <code>TreeWaklker</code> eine Möglichkeit, das DOM zu traversieren.
+Mit der Nutzung von TreeWalker konzentriert man sich nicht auf die Implementierung der Traversieren-Algorithmus,
+sondern auf die Implementierung von Aktionen, die beim Besuchen einen Nodes bei im Baum  <code>TreeWalker</code> auszuführen
+ist.</p>
+</div>
+<div class="sect3">
+<h4 id="_konstruktor"><a class="anchor" href="#_konstruktor"></a>2.2.1. Konstruktor</h4>
+<div class="paragraph">
+<p>Mit <code>document.createTreeWalker()</code> kann man ein <code>TreeWalker</code> erstellen. Die Syntax der Funktion lautet:</p>
+</div>
+<div class="paragraph">
+<p><code>var treeWalker = document.createTreeWalker(root[, shownNodeType[, filter[, entitiesExpansion]]])</code></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>root</code> ein Node, das als Root-Node fungiert. Von diesem Node aus startet der <code>treeWalker</code> den Baum zu
+traversieren.</p>
+</li>
+<li>
+<p><code>shownNodeType</code> Ein Bitmask von <code>unsigned long</code> (32 Bits), maskiert die Typen von Node, welche
+in dem Traversieren berücksichtigt werden. Die Non-Matching Node wird ignoriert, dessen Child-Nodes
+werden aber inkludiert. Der default Wert ist <code>-1</code> (<code>-1 &gt;&gt;&gt; 32</code> oder <code>4294967295</code>, oder <code>0xFFFFFFFF</code>).
+Die Masken kann man in den nächsten Tabellen entgegennehmen:</p>
+</li>
+</ul>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<caption class="title">Table 1. Masken in <code>NodeFilter</code></caption>
+<colgroup>
+<col style="width:33.3333%">
+<col style="width:33.3333%">
+<col style="width:33.3334%">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Mask</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Wert</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Bedeutung</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>NodeFilter.SHOW_ALL</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>0xFFFFFFFF</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Zeige alle Nodes</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>NodeFilter.SHOW_COMMENT</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>128</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>NodeFilter.SHOW_DOCUMENT</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>256</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>NodeFilter.SHOW_DOCUMENT_FRAGMENT</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>1024</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>NodeFilter.SHOW_DOCUMENT_TYPE</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>512</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>NodeFilter.SHOW_ELEMENT</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>1</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>NodeFilter.SHOW_TEXT</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>4</code></p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>Die veraltete Masken werden nicht gezeigt. Die Tabelle aus <a href="https://developer.mozilla.org/en-US/docs/Web/API/Document/createTreeWalker" class="bare">https://developer.mozilla.org/en-US/docs/Web/API/Document/createTreeWalker</a>
+zeigt eine vollständige Liste der Masken.</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>filter</code> Ein optionales Objekt mit der Methode <code>acceptNode(node)</code>. Diese Methode kann folgenden Werten zurückgeben:</p>
+<div class="ulist">
+<ul>
+<li>
+<p><code>NodeFilter.FILTER_ACCEPT</code> akzeptiert den Argument <code>node</code></p>
+</li>
+<li>
+<p><code>NodeFilter.FILTER_REJECT</code> den Argument <code>node</code> ablehnen, auch dessen Nodes in <code>childNodes</code></p>
+</li>
+<li>
+<p><code>NodeFilter.FILTER_SKIP</code> ignoriert den aktuellen Node, aber berücksichtigt die Nodes in dessen <code>childNodes</code></p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p><code>entitiesExpandsion</code> veraltet und nicht relevant für HTML. Man soll es nicht benutzen.</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_anwendung_von_treewalker"><a class="anchor" href="#_anwendung_von_treewalker"></a>2.2.2. Anwendung von <code>TreeWalker</code></h4>
+<div class="paragraph">
+<div class="title">Extrahieren Texten in einem DOM</div>
+<p>In diesem Beispiel wird <code>TreeWalker</code> verwendet um nur Text in einem DOM auszugeben. Da wir keine Interesse
+an anderem Nodes, können wir <code>NodeFilter.SHOW_TEXT</code> verwenden um nur Text-Node zu erhalten.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="snippet cm-s-default" data-language="text/html"><span class="cm-meta">&lt;!doctype html&gt;</span>
+<span class="cm-tag cm-bracket">&lt;</span><span class="cm-tag">html</span> <span class="cm-attribute">lang</span>=<span class="cm-string">"de"</span><span class="cm-tag cm-bracket">&gt;</span>
+  <span class="cm-tag cm-bracket">&lt;</span><span class="cm-tag">head</span><span class="cm-tag cm-bracket">&gt;</span>
+    <span class="cm-tag cm-bracket">&lt;</span><span class="cm-tag">title</span><span class="cm-tag cm-bracket">&gt;</span>Plain HTML<span class="cm-tag cm-bracket">&lt;/</span><span class="cm-tag">title</span><span class="cm-tag cm-bracket">&gt;</span>
+  <span class="cm-tag cm-bracket">&lt;/</span><span class="cm-tag">head</span><span class="cm-tag cm-bracket">&gt;</span>
+  <span class="cm-tag cm-bracket">&lt;</span><span class="cm-tag">body</span><span class="cm-tag cm-bracket">&gt;</span>
+    <span class="cm-tag cm-bracket">&lt;</span><span class="cm-tag">h1</span><span class="cm-tag cm-bracket">&gt;</span>Plain HTML<span class="cm-tag cm-bracket">&lt;/</span><span class="cm-tag">h1</span><span class="cm-tag cm-bracket">&gt;</span>
+
+    <span class="cm-tag cm-bracket">&lt;</span><span class="cm-tag">p</span><span class="cm-tag cm-bracket">&gt;</span>HTML steht für Hypertext Markup Language.<span class="cm-tag cm-bracket">&lt;/</span><span class="cm-tag">p</span><span class="cm-tag cm-bracket">&gt;</span>
+
+    <span class="cm-tag cm-bracket">&lt;</span><span class="cm-tag">p</span><span class="cm-tag cm-bracket">&gt;</span>HTML wird als Baum-Struktur dargestellt.<span class="cm-tag cm-bracket">&lt;/</span><span class="cm-tag">p</span><span class="cm-tag cm-bracket">&gt;</span>
+    Text ohne Tags
+
+    Other Text
+
+    <span class="cm-tag cm-bracket">&lt;</span><span class="cm-tag">script</span><span class="cm-tag cm-bracket">&gt;</span>
+    <span class="cm-keyword">var</span> <span class="cm-def">treeWalker</span> <span class="cm-operator">=</span> <span class="cm-variable">document</span>.<span class="cm-property">createTreeWalker</span>(
+        <span class="cm-variable">document</span>.<span class="cm-property">body</span>,            <span class="cm-comment">// <i class="conum" data-value="1"></i><b>(1)</b></span>
+        <span class="cm-variable">NodeFilter</span>.<span class="cm-property">SHOW_TEXT</span>      <span class="cm-comment">// <i class="conum" data-value="2"></i><b>(2)</b></span>
+    );
+    <span class="cm-keyword">var</span> <span class="cm-def">text</span> <span class="cm-operator">=</span> [];
+    <span class="cm-keyword">var</span> <span class="cm-def">currentNode</span> <span class="cm-operator">=</span> <span class="cm-atom">undefined</span>;
+    <span class="cm-keyword">while</span> ( <span class="cm-variable">treeWalker</span>.<span class="cm-property">nextNode</span>() ){
+        <span class="cm-variable">currentNode</span> <span class="cm-operator">=</span> <span class="cm-variable">treeWalker</span>.<span class="cm-property">currentNode</span>;
+        <span class="cm-keyword">if</span> (<span class="cm-variable">currentNode</span>.<span class="cm-property">parentNode</span> <span class="cm-operator">&amp;</span><span class="cm-operator">&amp;</span> <span class="cm-variable">currentNode</span>.<span class="cm-property">parentNode</span>.<span class="cm-property">tagName</span> <span class="cm-operator">!=</span> <span class="cm-string">"SCRIPT"</span>) { <span class="cm-comment">// <i class="conum" data-value="3"></i><b>(3)</b></span>
+            <span class="cm-variable">text</span>.<span class="cm-property">push</span>(<span class="cm-variable">treeWalker</span>.<span class="cm-property">currentNode</span>.<span class="cm-property">textContent</span>);
+        }
+    }
+    <span class="cm-variable">console</span>.<span class="cm-property">log</span>(<span class="cm-string">"&gt;&gt;&gt;&gt;"</span> <span class="cm-operator">+</span> <span class="cm-variable">text</span>.<span class="cm-property">join</span>(<span class="cm-string">''</span>) <span class="cm-operator">+</span> <span class="cm-string">"&lt;&lt;&lt;&lt;"</span>);
+    <span class="cm-tag cm-bracket">&lt;/</span><span class="cm-tag">script</span><span class="cm-tag cm-bracket">&gt;</span>
+  <span class="cm-tag cm-bracket">&lt;/</span><span class="cm-tag">body</span><span class="cm-tag cm-bracket">&gt;</span>
+<span class="cm-tag cm-bracket">&lt;/</span><span class="cm-tag">html</span><span class="cm-tag cm-bracket">&gt;</span></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tbody><tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Nur Text in <code>&lt;body&gt;</code> wird berücksichtigt, deshalb der Rootnode ist <code>document.body</code>.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Nur Text Nodes werden berücksichtigt, deshalb ist es sinnvoll, nur durch Text zu iterieren.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>Eingebettete JavaScript ist kein Contents, also wird einfach ignoriert.</td>
+</tr>
+</tbody></table>
+</div>
+<div class="paragraph">
+<div class="title">Abzählen von leeren Text Nodes</div>
+<p>Text-Nodes kann man nicht gezielt vie Element Node abfragen. In diesem Fall bietet
+ein <code>TreeWalker</code> mit einem entsprechenden Filter die geeignete Lösung.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="snippet cm-s-default" data-language="text/html"><span class="cm-meta">&lt;!doctype html&gt;</span>
+<span class="cm-tag cm-bracket">&lt;</span><span class="cm-tag">html</span> <span class="cm-attribute">lang</span>=<span class="cm-string">"de"</span><span class="cm-tag cm-bracket">&gt;</span>
+  <span class="cm-tag cm-bracket">&lt;</span><span class="cm-tag">head</span><span class="cm-tag cm-bracket">&gt;</span>
+    <span class="cm-tag cm-bracket">&lt;</span><span class="cm-tag">title</span><span class="cm-tag cm-bracket">&gt;</span>Plain HTML<span class="cm-tag cm-bracket">&lt;/</span><span class="cm-tag">title</span><span class="cm-tag cm-bracket">&gt;</span>
+  <span class="cm-tag cm-bracket">&lt;/</span><span class="cm-tag">head</span><span class="cm-tag cm-bracket">&gt;</span>
+  <span class="cm-tag cm-bracket">&lt;</span><span class="cm-tag">body</span><span class="cm-tag cm-bracket">&gt;</span>
+    <span class="cm-tag cm-bracket">&lt;</span><span class="cm-tag">h1</span><span class="cm-tag cm-bracket">&gt;</span>Plain HTML<span class="cm-tag cm-bracket">&lt;/</span><span class="cm-tag">h1</span><span class="cm-tag cm-bracket">&gt;</span>
+
+    <span class="cm-tag cm-bracket">&lt;</span><span class="cm-tag">p</span><span class="cm-tag cm-bracket">&gt;</span>HTML steht für Hypertext Markup Language.<span class="cm-tag cm-bracket">&lt;/</span><span class="cm-tag">p</span><span class="cm-tag cm-bracket">&gt;</span>
+
+    <span class="cm-tag cm-bracket">&lt;</span><span class="cm-tag">p</span><span class="cm-tag cm-bracket">&gt;</span>HTML wird als <span class="cm-tag cm-bracket">&lt;</span><span class="cm-tag">i</span><span class="cm-tag cm-bracket">&gt;</span>Baum<span class="cm-tag cm-bracket">&lt;/</span><span class="cm-tag">i</span><span class="cm-tag cm-bracket">&gt;</span>-Struktur <span class="cm-tag cm-bracket">&lt;</span><span class="cm-tag">span</span><span class="cm-tag cm-bracket">&gt;</span>    <span class="cm-tag cm-bracket">&lt;/</span><span class="cm-tag">span</span><span class="cm-tag cm-bracket">&gt;</span> dargestellt.<span class="cm-tag cm-bracket">&lt;/</span><span class="cm-tag">p</span><span class="cm-tag cm-bracket">&gt;</span>
+    Text ohne Tags
+
+    Other Text
+
+    <span class="cm-tag cm-bracket">&lt;</span><span class="cm-tag">script</span><span class="cm-tag cm-bracket">&gt;</span>
+    <span class="cm-keyword">var</span> <span class="cm-def">treeWalker</span> <span class="cm-operator">=</span> <span class="cm-variable">document</span>.<span class="cm-property">createTreeWalker</span>(
+        <span class="cm-variable">document</span>.<span class="cm-property">body</span>,             <span class="cm-comment">// <i class="conum" data-value="1"></i><b>(1)</b></span>
+        <span class="cm-variable">NodeFilter</span>.<span class="cm-property">SHOW_TEXT</span>,      <span class="cm-comment">// <i class="conum" data-value="2"></i><b>(2)</b></span>
+        { <span class="cm-comment">// <i class="conum" data-value="3"></i><b>(3)</b></span>
+            <span class="cm-property">acceptNode</span>: <span class="cm-keyword">function</span>( <span class="cm-def">node</span> ){
+                <span class="cm-keyword">var</span> <span class="cm-def">textContent</span> <span class="cm-operator">=</span> <span class="cm-variable-2">node</span>.<span class="cm-property">textContent</span>;
+                <span class="cm-keyword">return</span> <span class="cm-variable-2">textContent</span>.<span class="cm-property">trim</span>().<span class="cm-property">length</span> <span class="cm-operator">===</span> <span class="cm-number">0</span> <span class="cm-operator">?</span> <span class="cm-variable">NodeFilter</span>.<span class="cm-property">FILTER_ACCEPT</span>
+                    : <span class="cm-variable">NodeFilter</span>.<span class="cm-property">FILTER_REJECT</span>;
+
+            }
+        }
+    );
+    <span class="cm-keyword">var</span> <span class="cm-def">count</span> <span class="cm-operator">=</span> <span class="cm-number">0</span>;
+    <span class="cm-keyword">while</span> ( <span class="cm-variable">treeWalker</span>.<span class="cm-property">nextNode</span>() ){
+        <span class="cm-operator">++</span><span class="cm-variable">count</span>;
+    }
+    <span class="cm-variable">console</span>.<span class="cm-property">log</span>(<span class="cm-string">"Number of empty text node:"</span>, <span class="cm-variable">count</span>);
+    <span class="cm-tag cm-bracket">&lt;/</span><span class="cm-tag">script</span><span class="cm-tag cm-bracket">&gt;</span>
+  <span class="cm-tag cm-bracket">&lt;/</span><span class="cm-tag">body</span><span class="cm-tag cm-bracket">&gt;</span>
+<span class="cm-tag cm-bracket">&lt;/</span><span class="cm-tag">html</span><span class="cm-tag cm-bracket">&gt;</span></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tbody><tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Wie das frühere Beispiele</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Wie das früherer Beispiele</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>Ein Filter-Objekt wird verwendet die Entscheidung, ob ein Node iteriert wird, zu treffen.
+Die Funktion <code>acceptNode</code> akzeptiert nur Text Node (wegen #2) mit nur Whitespaces.</td>
+</tr>
+</tbody></table>
+</div>
+<div class="paragraph">
+<p>Weitere Methoden eines Instanze <code>TreeWalker</code> kann man aus
+<a href="https://developer.mozilla.org/en-US/docs/Web/API/TreeWalker" class="bare">https://developer.mozilla.org/en-US/docs/Web/API/TreeWalker</a>
+entgegennehmen.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_dom_manipulation"><a class="anchor" href="#_dom_manipulation"></a>3. DOM Manipulation</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Iteration durch den Baum ist zwar geeignet, um mehrerer Nodes mit gemeinsame Eigenschaften
+zu verarbeiten. Die DOM-API bietet noch die Möglichkeit, einen bestimmten Menge von Nodes
+aus dem DOM zuzugreifen, ohne den ganzen Baum explizit zu iterieren.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="snippet cm-s-default" data-language="text/html"><span class="cm-tag cm-bracket">&lt;</span><span class="cm-tag">style</span><span class="cm-tag cm-bracket">&gt;</span>
+    <span class="cm-tag">pre</span> {
+        <span class="cm-property">background-color</span>: <span class="cm-atom">#000000</span>;
+        <span class="cm-property">text-align</span>: <span class="cm-atom">center</span>;
+        <span class="cm-property">padding-top</span>: <span class="cm-number">12px</span>;
+        <span class="cm-property">padding-bottom</span>: <span class="cm-number">12px</span>;
+        <span class="cm-property">font-weight</span>: <span class="cm-atom">bold</span>;
+        <span class="cm-property">font-size</span>: <span class="cm-number">20pt</span>;
+    }
+    <span class="cm-tag">pre</span> *<span class="cm-qualifier">.even</span>{
+        <span class="cm-property">color</span>: <span class="cm-atom">#ff2121</span>;
+    }
+
+    <span class="cm-tag">pre</span> *<span class="cm-qualifier">.odd</span>{
+        <span class="cm-property">color</span>: <span class="cm-atom">#3be211</span>;
+    }
+<span class="cm-tag cm-bracket">&lt;/</span><span class="cm-tag">style</span><span class="cm-tag cm-bracket">&gt;</span>
+<span class="cm-tag cm-bracket">&lt;</span><span class="cm-tag">div</span> <span class="cm-attribute">id</span>=<span class="cm-string">"container"</span><span class="cm-tag cm-bracket">&gt;</span><span class="cm-tag cm-bracket">&lt;/</span><span class="cm-tag">div</span><span class="cm-tag cm-bracket">&gt;</span>
+
+<span class="cm-tag cm-bracket">&lt;</span><span class="cm-tag">script</span><span class="cm-tag cm-bracket">&gt;</span>
+    <span class="cm-keyword">function</span> <span class="cm-def">printMapTriangleToDOM</span>(<span class="cm-def">triangle</span>, <span class="cm-def">target</span>) {
+        <span class="cm-keyword">if</span> (<span class="cm-variable-2">target</span>.<span class="cm-property">appendChild</span> <span class="cm-operator">!==</span> <span class="cm-atom">undefined</span>){
+            <span class="cm-keyword">let</span> <span class="cm-def">preTag</span> <span class="cm-operator">=</span> <span class="cm-variable">document</span>.<span class="cm-property">createElement</span>(<span class="cm-string">"pre"</span>);
+            <span class="cm-variable-2">preTag</span>.<span class="cm-property">innerHTML</span> <span class="cm-operator">=</span> <span class="cm-variable-2">triangle</span>.<span class="cm-property">map</span>( (<span class="cm-def">line</span>, <span class="cm-def">idx</span>) <span class="cm-operator">=&gt;</span> {
+                <span class="cm-keyword">const</span> <span class="cm-def">cssClass</span> <span class="cm-operator">=</span> <span class="cm-variable-2">idx</span> <span class="cm-operator">%</span> <span class="cm-number">2</span><span class="cm-operator">?</span> <span class="cm-string">'odd'</span> : <span class="cm-string">'even'</span>;
+                <span class="cm-keyword">const</span> <span class="cm-def">space</span> <span class="cm-operator">=</span> <span class="cm-string-2">`&lt;code class="${</span><span class="cm-variable-2">cssClass</span><span class="cm-string-2">}</span><span class="cm-string-2">"&gt;${</span><span class="cm-string">' '</span>.<span class="cm-property">repeat</span>(<span class="cm-variable-2">line</span>.<span class="cm-property">space</span>)<span class="cm-string-2">}</span><span class="cm-string-2">&lt;/code&gt;`</span>;
+                <span class="cm-keyword">return</span> <span class="cm-string-2">`${</span><span class="cm-variable-2">space</span><span class="cm-string-2">}</span><span class="cm-string-2">&lt;code class="${</span><span class="cm-variable-2">cssClass</span><span class="cm-string-2">}</span><span class="cm-string-2">"&gt;${</span><span class="cm-variable-2">line</span>.<span class="cm-property">fill</span>.<span class="cm-property">join</span>(<span class="cm-string">''</span>)<span class="cm-string-2">}</span><span class="cm-string-2">&lt;/code&gt;${</span><span class="cm-variable-2">space</span><span class="cm-string-2">}</span><span class="cm-string-2">&lt;br/&gt;`</span>;
+            }).<span class="cm-property">join</span>(<span class="cm-string">''</span>);
+            <span class="cm-variable-2">target</span>.<span class="cm-property">appendChild</span>(<span class="cm-variable-2">preTag</span>);
+        }<span class="cm-keyword">else</span>{
+            <span class="cm-keyword">throw</span> <span class="cm-keyword">new</span> <span class="cm-variable">TypeError</span>( <span class="cm-string">"target.appendChild is notdefined"</span> );
+        }
+    }
+    <span class="cm-keyword">var</span> <span class="cm-def">triangle</span> <span class="cm-operator">=</span> [
+       {<span class="cm-property">space</span>: <span class="cm-number">4</span>, <span class="cm-property">fill</span>: [<span class="cm-string">"*"</span>]},
+       {<span class="cm-property">space</span>: <span class="cm-number">3</span>, <span class="cm-property">fill</span>: [<span class="cm-string">"*"</span>, <span class="cm-string">" "</span>, <span class="cm-string">"*"</span>]},
+       {<span class="cm-property">space</span>: <span class="cm-number">2</span>, <span class="cm-property">fill</span>: [<span class="cm-string">"*"</span>, <span class="cm-string">" "</span>, <span class="cm-string">"*"</span>, <span class="cm-string">" "</span>, <span class="cm-string">"*"</span>]},
+       {<span class="cm-property">space</span>: <span class="cm-number">1</span>, <span class="cm-property">fill</span>: [<span class="cm-string">"*"</span>, <span class="cm-string">" "</span>, <span class="cm-string">"*"</span>, <span class="cm-string">" "</span>, <span class="cm-string">"*"</span>, <span class="cm-string">" "</span>, <span class="cm-string">"*"</span>]},
+       {<span class="cm-property">space</span>: <span class="cm-number">0</span>, <span class="cm-property">fill</span>: [<span class="cm-string">"*"</span>, <span class="cm-string">" "</span>, <span class="cm-string">"*"</span>, <span class="cm-string">" "</span>, <span class="cm-string">"*"</span>, <span class="cm-string">" "</span>, <span class="cm-string">"*"</span>, <span class="cm-string">" "</span>, <span class="cm-string">"*"</span>]}
+    ];
+    <span class="cm-variable">printMapTriangleToDOM</span>(<span class="cm-variable">triangle</span>, <span class="cm-variable">document</span>.<span class="cm-property">getElementById</span>(<span class="cm-string">"container"</span>) );
+<span class="cm-tag cm-bracket">&lt;/</span><span class="cm-tag">script</span><span class="cm-tag cm-bracket">&gt;</span></pre>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_geschwindigkeit"><a class="anchor" href="#_geschwindigkeit"></a>3.1. Geschwindigkeit</h3>
+<div class="paragraph">
+<p>Die Manipulation auf DOM-Baum ist langsam. Wir beobachten folgenden Beispiel:</p>
+</div>
+<div class="listingblock">
+<div class="title">Time Messung</div>
+<div class="content">
+<pre class="snippet cm-s-default" data-language="text/html"><span class="cm-tag cm-bracket">&lt;</span><span class="cm-tag">p</span><span class="cm-tag cm-bracket">&gt;</span><span class="cm-tag cm-bracket">&lt;</span><span class="cm-tag">code</span> <span class="cm-attribute">id</span>=<span class="cm-string">"native"</span><span class="cm-tag cm-bracket">&gt;</span><span class="cm-tag cm-bracket">&lt;/</span><span class="cm-tag">code</span><span class="cm-tag cm-bracket">&gt;</span><span class="cm-tag cm-bracket">&lt;/</span><span class="cm-tag">p</span><span class="cm-tag cm-bracket">&gt;</span>
+<span class="cm-tag cm-bracket">&lt;</span><span class="cm-tag">p</span><span class="cm-tag cm-bracket">&gt;</span><span class="cm-tag cm-bracket">&lt;</span><span class="cm-tag">code</span> <span class="cm-attribute">id</span>=<span class="cm-string">"string"</span><span class="cm-tag cm-bracket">&gt;</span><span class="cm-tag cm-bracket">&lt;/</span><span class="cm-tag">code</span><span class="cm-tag cm-bracket">&gt;</span><span class="cm-tag cm-bracket">&lt;/</span><span class="cm-tag">p</span><span class="cm-tag cm-bracket">&gt;</span>
+
+<span class="cm-tag cm-bracket">&lt;</span><span class="cm-tag">script</span><span class="cm-tag cm-bracket">&gt;</span>
+    <span class="cm-keyword">function</span> <span class="cm-def">time</span>(<span class="cm-def">name</span>, <span class="cm-def">action</span>) {
+        <span class="cm-keyword">var</span> <span class="cm-def">start</span> <span class="cm-operator">=</span> <span class="cm-variable">performance</span>.<span class="cm-property">now</span>(); <span class="cm-comment">// Current time in milliseconds</span>
+        <span class="cm-variable-2">action</span>();
+        <span class="cm-variable">console</span>.<span class="cm-property">log</span>(<span class="cm-variable-2">name</span>, <span class="cm-string">"took"</span>, <span class="cm-variable">performance</span>.<span class="cm-property">now</span>() <span class="cm-operator">-</span> <span class="cm-variable-2">start</span>, <span class="cm-string">"ms"</span>);
+    }
+
+    <span class="cm-variable">time</span>(<span class="cm-string">"naive"</span>, <span class="cm-keyword">function</span>() {
+        <span class="cm-keyword">var</span> <span class="cm-def">target</span> <span class="cm-operator">=</span> <span class="cm-variable">document</span>.<span class="cm-property">getElementById</span>(<span class="cm-string">"native"</span>);
+        <span class="cm-keyword">while</span> (<span class="cm-variable-2">target</span>.<span class="cm-property">offsetWidth</span> <span class="cm-operator">&lt;</span> <span class="cm-number">2000</span>) {
+            <span class="cm-variable-2">target</span>.<span class="cm-property">appendChild</span>(<span class="cm-variable">document</span>.<span class="cm-property">createTextNode</span>(<span class="cm-string">"X"</span>)); <span class="cm-comment">// <i class="conum" data-value="1"></i><b>(1)</b></span>
+        }
+    });
+
+    <span class="cm-variable">time</span>(<span class="cm-string">"string"</span>, <span class="cm-keyword">function</span>(){
+        <span class="cm-keyword">var</span> <span class="cm-def">target</span> <span class="cm-operator">=</span> <span class="cm-variable">document</span>.<span class="cm-property">getElementById</span>(<span class="cm-string">"string"</span>);
+        <span class="cm-variable-2">target</span>.<span class="cm-property">appendChild</span>(<span class="cm-variable">document</span>.<span class="cm-property">createTextNode</span>(<span class="cm-string">"XXXXX"</span>));
+        <span class="cm-keyword">var</span> <span class="cm-def">total</span> <span class="cm-operator">=</span> <span class="cm-variable">Math</span>.<span class="cm-property">ceil</span>(<span class="cm-number">2000</span> <span class="cm-operator">/</span> (<span class="cm-variable-2">target</span>.<span class="cm-property">offsetWidth</span> <span class="cm-operator">/</span> <span class="cm-number">5</span>));
+        <span class="cm-keyword">for</span> (<span class="cm-keyword">var</span> <span class="cm-def">i</span> <span class="cm-operator">=</span> <span class="cm-number">5</span>; <span class="cm-variable-2">i</span> <span class="cm-operator">&lt;</span> <span class="cm-variable-2">total</span>; <span class="cm-variable-2">i</span><span class="cm-operator">++</span>) {
+            <span class="cm-variable-2">target</span>.<span class="cm-property">appendChild</span>( <span class="cm-variable">document</span>.<span class="cm-property">createTextNode</span>(<span class="cm-string">"X"</span>) ); <span class="cm-comment">// <i class="conum" data-value="2"></i><b>(2)</b></span>
+        }
+    });
+<span class="cm-tag cm-bracket">&lt;/</span><span class="cm-tag">script</span><span class="cm-tag cm-bracket">&gt;</span></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tbody><tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td><code>appendChild</code> wird 2000 mal aufgerufen.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td><code>appendChild</code> wird c.a 2000 / 5 mal aufrufen.</td>
+</tr>
+</tbody></table>
+</div>
+<div class="paragraph">
+<p>Die Berechnung von <code>offsetWidth</code> kostet je nach Element unterschiedlichen Aufwand.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_selbst_studium"><a class="anchor" href="#_selbst_studium"></a>3.2. Selbst-Studium</h3>
+<div class="paragraph">
+<p>Recherchieren Sie die folgenden Methoden.</p>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><code>document.getElementsByName(tagName)</code></dt>
+<dd>
+<p>(Selbststudium)</p>
+</dd>
+<dt class="hdlist1"><code>document.getElementsByClassName(className)</code></dt>
+<dd>
+<p>(Selbststudium)</p>
+</dd>
+<dt class="hdlist1"><code>document.getElementById(id)</code></dt>
+<dd>
+<p>(Selbststudium)</p>
+</dd>
+<dt class="hdlist1"><code>document.querySelect(query)</code></dt>
+<dd>
+<p>(Selbststudium)</p>
+</dd>
+<dt class="hdlist1"><code>document.querySelectorAll(query)</code></dt>
+<dd>
+<p>(Selbststudium)</p>
+</dd>
+<dt class="hdlist1"><code>document.querySelector(query)</code></dt>
+<dd>
+<p>(Selbststudium)</p>
+</dd>
+</dl>
+</div>
+<hr>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><code>HTMLElement.dataset</code></dt>
+<dd>
+<p>(Selbststudium)</p>
+</dd>
+<dt class="hdlist1"><code>HTMLInputElement.value</code></dt>
+<dd>
+<p>(Selbststudium)</p>
+</dd>
+</dl>
+</div>
+<div class="paragraph">
+<p>More Infos: <a href="https://developer.mozilla.org/en-US/docs/Web/API/HTMLInputElement" class="bare">https://developer.mozilla.org/en-US/docs/Web/API/HTMLInputElement</a></p>
+</div>
+<hr>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><code>document.createTextNode(text)</code></dt>
+<dd>
+<p>(Selbststudium)</p>
+</dd>
+<dt class="hdlist1"><code>document.createElement(tagName)</code></dt>
+<dd>
+<p>(Selbststudium)</p>
+</dd>
+<dt class="hdlist1"><code>document.appendChild(node)</code></dt>
+<dd>
+<p>(Selbststudium)</p>
+</dd>
+</dl>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_dom_mit_jquery"><a class="anchor" href="#_dom_mit_jquery"></a>4. DOM mit jQuery</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Die Bibliothek <a href="https://jquery.com/">jQuery</a> bietet ein umfangreiches Hilfmittels zur Manipulation von DOM.
+In diesem Abschnitt wird Code auf dem Projekt <code>pirate-island</code> aufgebaut.</p>
+</div>
+<div class="sect2">
+<h3 id="_einstellung_in_webpack_projekt"><a class="anchor" href="#_einstellung_in_webpack_projekt"></a>4.1. Einstellung in Webpack Projekt</h3>
+<div class="paragraph">
+<div class="title">jQuery in <code>webpack.config.js</code> deklratieren</div>
+<p>Der Abschnitt <code>plugins</code> wird um das <code>webpack.Provide</code> erweitern.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="snippet cm-s-default" data-language="js">// ...
+plugins: [
+    // ...
+    new webpack.ProvidePlugin({ // (1)
+      jQuery: 'jquery',
+      $: 'jquery',
+      jquery: 'jquery'
+    }),
+    //
+]
+// ...</pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tbody><tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Der Konstruktor <code>ProvidePlugin</code> erwartet einen Map mit den Keys als globale Variable-Namen
+und Werten als der entsprechenden Bibliotheken, welche diese globalen Variablen definiert.</td>
+</tr>
+</tbody></table>
+</div>
+<div class="paragraph">
+<div class="title">jQuery Packet installieren</div>
+<p>Die Bibliothek JQuery muss via <code>npm</code> installiert werden:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="snippet cm-s-default" data-language="sh">npm install --save jquery</pre>
+</div>
+</div>
+<div class="ulist">
+<div class="title">Test der Einstellungen</div>
+<ul>
+<li>
+<p>In der Datei <code>game-play.js</code> wird am Anfang der Datei ergänzt.</p>
+<div class="listingblock">
+<div class="content">
+<pre class="snippet cm-s-default" data-language="js">import $ from 'jquery'; // (1)
+
+if ($) {
+    $("body").append("&lt;h1&gt;jQuery loaded&lt;/h1&gt;");  // (2)
+}else {
+    console.error("jquery is not loaded as $."); // (2)
+}</pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tbody><tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Die Bibliothek <code>jquery</code> als Abhängigkeit deklarieren</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Code zum Testen</td>
+</tr>
+</tbody></table>
+</div>
+</li>
+<li>
+<p>Start der Dev Server mit <code>npm</code></p>
+<div class="listingblock">
+<div class="content">
+<pre class="snippet cm-s-default" data-language="sh">npm run dev</pre>
+</div>
+</div>
+</li>
+<li>
+<p>Öffne <code><a href="http://localhost:8080/assert/game-play.html" class="bare">http://localhost:8080/assert/game-play.html</a></code> in einem Browser.
+Wenn alles korrekt läuft, muss man einen neuen Tag <code>&lt;h1&gt;</code> mit dem Schrift
+"jQuery loaded" im Dokument sehen.</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_jquery_api_für_die_dom_manipulation"><a class="anchor" href="#_jquery_api_für_die_dom_manipulation"></a>4.2. <code>jQuery</code> API für die DOM Manipulation</h3>
+<div class="paragraph">
+<p>Die Arbeit mit jQuery ist weniger fehleranfällig as direkt mit der DOM-API. Dennoch gibt es Nachteil bezüglich der
+Geschwindigkeit. Die Methoden in jQuery gibt weder <code>null</code> noch <code>undefined</code> zurück, so wird kein <code>TypeError</code>
+ausgeworfen wenn eine Element nicht existiert. Weitere Code kann weiter ausgeführt werden. Wir schauen ein
+Beispiel an:</p>
+</div>
+<div class="listingblock">
+<div class="title"><code>jQuery('#id')</code></div>
+<div class="content">
+<pre class="snippet cm-s-default" data-language="text/html"><span class="cm-tag cm-bracket">&lt;</span><span class="cm-tag">script</span> <span class="cm-attribute">src</span>=<span class="cm-string">"demo/jquery-3.2.1.js"</span><span class="cm-tag cm-bracket">&gt;</span><span class="cm-tag cm-bracket">&lt;/</span><span class="cm-tag">script</span><span class="cm-tag cm-bracket">&gt;</span>
+<span class="cm-tag cm-bracket">&lt;</span><span class="cm-tag">p</span><span class="cm-tag cm-bracket">&gt;</span><span class="cm-tag cm-bracket">&lt;</span><span class="cm-tag">span</span> <span class="cm-attribute">id</span>=<span class="cm-string">"begin"</span><span class="cm-tag cm-bracket">&gt;</span><span class="cm-tag cm-bracket">&lt;/</span><span class="cm-tag">span</span><span class="cm-tag cm-bracket">&gt;</span><span class="cm-tag cm-bracket">&lt;/</span><span class="cm-tag">p</span><span class="cm-tag cm-bracket">&gt;</span>
+<span class="cm-tag cm-bracket">&lt;</span><span class="cm-tag">p</span><span class="cm-tag cm-bracket">&gt;</span><span class="cm-tag cm-bracket">&lt;</span><span class="cm-tag">span</span> <span class="cm-attribute">id</span>=<span class="cm-string">"text"</span><span class="cm-tag cm-bracket">&gt;</span><span class="cm-tag cm-bracket">&lt;/</span><span class="cm-tag">span</span><span class="cm-tag cm-bracket">&gt;</span><span class="cm-tag cm-bracket">&lt;/</span><span class="cm-tag">p</span><span class="cm-tag cm-bracket">&gt;</span>
+<span class="cm-tag cm-bracket">&lt;</span><span class="cm-tag">script</span><span class="cm-tag cm-bracket">&gt;</span>
+    <span class="cm-variable">$</span>(<span class="cm-string">"#Begin"</span>).<span class="cm-property">append</span>(<span class="cm-string">"Begin"</span>); <span class="cm-comment">// <i class="conum" data-value="1"></i><b>(1)</b></span>
+    <span class="cm-variable">$</span>(<span class="cm-string">"#text"</span>).<span class="cm-property">append</span>(<span class="cm-string">"Done"</span>);   <span class="cm-comment">// <i class="conum" data-value="2"></i><b>(2)</b></span>
+<span class="cm-tag cm-bracket">&lt;/</span><span class="cm-tag">script</span><span class="cm-tag cm-bracket">&gt;</span></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tbody><tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Es gibt kein Element mit der Id <code>Begin</code>, JQuery ignoriert einfach <code>append</code>.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Der nächste Befehl wird abgearbeitet.</td>
+</tr>
+</tbody></table>
+</div>
+<div class="listingblock">
+<div class="title"><code>document.getElementById</code></div>
+<div class="content">
+<pre class="snippet cm-s-default" data-language="text/html"><span class="cm-tag cm-bracket">&lt;</span><span class="cm-tag">p</span><span class="cm-tag cm-bracket">&gt;</span><span class="cm-tag cm-bracket">&lt;</span><span class="cm-tag">span</span> <span class="cm-attribute">id</span>=<span class="cm-string">"begin"</span><span class="cm-tag cm-bracket">&gt;</span><span class="cm-tag cm-bracket">&lt;/</span><span class="cm-tag">span</span><span class="cm-tag cm-bracket">&gt;</span><span class="cm-tag cm-bracket">&lt;/</span><span class="cm-tag">p</span><span class="cm-tag cm-bracket">&gt;</span>
+<span class="cm-tag cm-bracket">&lt;</span><span class="cm-tag">p</span><span class="cm-tag cm-bracket">&gt;</span><span class="cm-tag cm-bracket">&lt;</span><span class="cm-tag">span</span> <span class="cm-attribute">id</span>=<span class="cm-string">"text"</span><span class="cm-tag cm-bracket">&gt;</span><span class="cm-tag cm-bracket">&lt;/</span><span class="cm-tag">span</span><span class="cm-tag cm-bracket">&gt;</span><span class="cm-tag cm-bracket">&lt;/</span><span class="cm-tag">p</span><span class="cm-tag cm-bracket">&gt;</span>
+<span class="cm-tag cm-bracket">&lt;</span><span class="cm-tag">script</span><span class="cm-tag cm-bracket">&gt;</span>
+    <span class="cm-variable">document</span>.<span class="cm-property">getElementById</span>(<span class="cm-string">"Begin"</span>)
+            .<span class="cm-property">appendChild</span>(<span class="cm-variable">document</span>.<span class="cm-property">createTextNode</span>(<span class="cm-string">"Begin"</span>)); <span class="cm-comment">// <i class="conum" data-value="1"></i><b>(1)</b></span>
+    <span class="cm-variable">document</span>.<span class="cm-property">getElementById</span>(<span class="cm-string">"text"</span>)
+            .<span class="cm-property">appendChild</span>(<span class="cm-variable">document</span>.<span class="cm-property">createTextNode</span>(<span class="cm-string">"Done"</span>));  <span class="cm-comment">// <i class="conum" data-value="2"></i><b>(2)</b></span>
+<span class="cm-tag cm-bracket">&lt;/</span><span class="cm-tag">script</span><span class="cm-tag cm-bracket">&gt;</span></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tbody><tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Das Ergebnis von <code>getElementById</code> in diesem Fall ist <code>null</code>. Es führt zum <code>TypeError</code> bei Aufruf von <code>appendChild</code>.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Da es einen <code>Error</code> passiert, wird dieser Befehl nicht mehr ausgeführt.</td>
+</tr>
+</tbody></table>
+</div>
+<div class="paragraph">
+<p>Nun betrachten wir die Geschwindigkeit von jQuery und DOM:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="snippet cm-s-default" data-language="text/html"><span class="cm-tag cm-bracket">&lt;</span><span class="cm-tag">script</span> <span class="cm-attribute">src</span>=<span class="cm-string">"demo/jquery-3.2.1.js"</span><span class="cm-tag cm-bracket">&gt;</span><span class="cm-tag cm-bracket">&lt;/</span><span class="cm-tag">script</span><span class="cm-tag cm-bracket">&gt;</span>
+<span class="cm-tag cm-bracket">&lt;</span><span class="cm-tag">p</span><span class="cm-tag cm-bracket">&gt;</span><span class="cm-tag cm-bracket">&lt;</span><span class="cm-tag">span</span> <span class="cm-attribute">id</span>=<span class="cm-string">"text"</span><span class="cm-tag cm-bracket">&gt;</span>text<span class="cm-tag cm-bracket">&lt;/</span><span class="cm-tag">span</span><span class="cm-tag cm-bracket">&gt;</span><span class="cm-tag cm-bracket">&lt;/</span><span class="cm-tag">p</span><span class="cm-tag cm-bracket">&gt;</span>
+<span class="cm-tag cm-bracket">&lt;</span><span class="cm-tag">script</span><span class="cm-tag cm-bracket">&gt;</span>
+<span class="cm-keyword">function</span> <span class="cm-def">time</span>(<span class="cm-def">name</span>, <span class="cm-def">action</span>) {
+    <span class="cm-keyword">var</span> <span class="cm-def">start</span> <span class="cm-operator">=</span> <span class="cm-variable">performance</span>.<span class="cm-property">now</span>(); <span class="cm-comment">// Current time in milliseconds</span>
+    <span class="cm-variable-2">action</span>();
+    <span class="cm-variable">console</span>.<span class="cm-property">log</span>(<span class="cm-variable-2">name</span>, <span class="cm-string">"took"</span>, <span class="cm-variable">performance</span>.<span class="cm-property">now</span>() <span class="cm-operator">-</span> <span class="cm-variable-2">start</span>, <span class="cm-string">"ms"</span>);
+}
+<span class="cm-keyword">var</span> <span class="cm-def">ITERATION</span> <span class="cm-operator">=</span> <span class="cm-number">2000</span>;
+<span class="cm-variable">time</span> (<span class="cm-string">"getElementById"</span>, <span class="cm-keyword">function</span>(){
+    <span class="cm-keyword">let</span> <span class="cm-def">count</span> <span class="cm-operator">=</span> <span class="cm-variable">ITERATION</span>;
+    <span class="cm-keyword">while</span>(<span class="cm-operator">--</span><span class="cm-variable-2">count</span> <span class="cm-operator">&gt;=</span> <span class="cm-number">0</span>){
+        <span class="cm-keyword">let</span> <span class="cm-def">el</span> <span class="cm-operator">=</span> <span class="cm-variable">document</span>.<span class="cm-property">getElementById</span>(<span class="cm-string">"text"</span>);
+    }
+});
+<span class="cm-variable">time</span> (<span class="cm-string">"jQuery(#)"</span>, <span class="cm-keyword">function</span>(){
+    <span class="cm-keyword">let</span> <span class="cm-def">count</span> <span class="cm-operator">=</span> <span class="cm-variable">ITERATION</span>;
+    <span class="cm-keyword">while</span>(<span class="cm-operator">--</span><span class="cm-variable-2">count</span> <span class="cm-operator">&gt;=</span> <span class="cm-number">0</span>) {
+        <span class="cm-keyword">let</span> <span class="cm-def">el</span> <span class="cm-operator">=</span> <span class="cm-variable">$</span>(<span class="cm-string">"#text"</span>);
+    }
+})
+<span class="cm-tag cm-bracket">&lt;/</span><span class="cm-tag">script</span><span class="cm-tag cm-bracket">&gt;</span></pre>
+</div>
+</div>
+<div class="paragraph">
+<div class="title">Fingerübung</div>
+<p>Testen Sie die Method <code>document.querySelector("#text")</code>.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+<script type="text/javascript" src="Document%20Object%20Model_fichiers/dfhi-sandbox.js"></script><iframe src="Document%20Object%20Model_fichiers/empty.html" style="display: none;"></iframe></body></html>
