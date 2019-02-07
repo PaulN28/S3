@@ -21,7 +21,8 @@ module.exports = (env) => {
 		mode: devMode ? "development" : "production",
 		entry: {
 			'template-program': './src/template-program/index.js',
-			'random-fair': './src/random-fair/index.js'
+			'random-fair': './src/random-fair/index.js',
+			'random-experiment': './src/random-experiment/index.js'
 		},
 		output: {
 			filename: devMode ? '[name].js' : '[name].[chunkhash:8].js',
@@ -52,6 +53,12 @@ module.exports = (env) => {
                 chunks: ['random-fair'],
                 favicon: path.resolve(__dirname, 'src/favicon.ico')
             }),
+			new HtmlWebpackPlugin({
+				template: "./src/random-experiment/index.html",
+				filename: "random-experiment.html",
+				chunks: ['random-experiment'],
+				favicon: path.resolve(__dirname, 'src/favicon.ico')
+			}),
 			
 			/* In Windows there is no development tool to compile
 				canvas which is necessary for JSXGraph

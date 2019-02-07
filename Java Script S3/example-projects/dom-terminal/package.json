@@ -9,7 +9,7 @@
     "clean": "rm -rf dist",
     "cleandoc": "rm -rf docs",
     "cleanall": "rm -rf node_modules; npm run cleandoc; npm run clean",
-    "start-server": "npx http-server -p 8084 dist -c-1 src",
+    "start-server": "npx http-server -p 8080 dist -c-1 src",
     "start-doc-server": "npx http-server -p 8083 docs -c-1 src",
     "test": "jest"
   },
@@ -38,8 +38,8 @@
     "regenerator-runtime": "^0.13.1",
     "style-loader": "^0.23.1",
     "terser-webpack-plugin": "^1.2.1",
-    "webpack": "^4.28.3",
-    "webpack-cli": "^3.1.2"
+    "webpack": "^4.29.3",
+    "webpack-cli": "^3.2.3"
   },
   "dependencies": {
     "jsxgraph": "^0.99.7",
